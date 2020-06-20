@@ -51,7 +51,7 @@ namespace HarClient.Tests.Mocks
             var method = request.Method;
             if (Responses.TryGetValue((path, method), out var response))
                 return response;
-            throw new TestException($"No response defined for ({path}, {method})");
+            throw new TestException($"No response defined for [{method} {path}]");
         }
     }
     static class RequestDictionaryExtensions

@@ -61,15 +61,16 @@ namespace HarClient.Tests.Mocks
             Assert.AreEqual(HttpStatusCode.Redirect, response.StatusCode);
             Assert.AreEqual(new Uri(MockServerHandler.BaseUri, "test"), response.Headers.Location);
         }
-        [TestMethod, ExpectedException(typeof(TestException))]
+        [TestMethod]
         public async Task ThrowsIfUnexpectedRequest()
         {
-            await client.GetAsync("http://garbage.url");
+            var thrownException = await Assert.ThrowsExceptionAsync<TestException>(() => client.GetAsync("http://garbage.url/"));
+            Assert.AreEqual("No response defined for [GET http://garbage.url/]", thrownException.Message);
         }
-        [TestMethod, ExpectedException(typeof(HttpRequestException))]
+        [TestMethod]
         public async Task ReturnsExceptionResponseAsDefined()
         {
-            _ = await client.GetAsync("broken");
+            await Assert.ThrowsExceptionAsync<HttpRequestException>(() => client.GetAsync("broken"));
         }
     }
 }
