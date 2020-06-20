@@ -17,11 +17,13 @@ namespace JBlam.HarClient
                 BodySize = GetBodySize(httpRequest.Content),
                 HttpVersion = httpRequest.Version.ToString(),
                 Method = httpRequest.Method.Method,
+                PostData = new PostData(),
                 Url = httpRequest.RequestUri,
             };
             output.Headers.AddRange(httpRequest.Headers.Select(AsHeader));
             if (httpRequest.Content != null)
             {
+                output.Headers.AddRange(httpRequest.Content.Headers.Select(AsHeader));
                 var wrappedContent = new HarContent(httpRequest.Content);
                 httpRequest.Content = wrappedContent;
                 _ = output.AppendContentAsync(wrappedContent);
@@ -43,9 +45,19 @@ namespace JBlam.HarClient
             output.Headers.AddRange(httpResponse.Headers.Select(AsHeader));
             if (httpResponse.Content != null)
             {
+                output.Headers.AddRange(httpResponse.Content.Headers.Select(AsHeader));
                 var wrappedContent = new HarContent(httpResponse.Content);
                 httpResponse.Content = wrappedContent;
                 _ = output.AppendContentAsync(wrappedContent);
+            }
+            else
+            {
+                output.Content = new Content
+                {
+                    MimeType = "text/plain",
+                    Size = 0,
+                    Text = ""
+                };
             }
             return output;
         }

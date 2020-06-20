@@ -24,25 +24,44 @@ namespace JBlam.HarClient
         internal async Task<PostData> GetPostData()
         {
             var bytes = await bytesAsync.ConfigureAwait(false);
-            // TODO: how to detect encoding properly?
-            // TODO: params?
-            return new PostData
+            if (bytes.Length > 0)
             {
-                MimeType = Headers.ContentType.MediaType,
-                Text = Convert.ToBase64String(bytes)
-            };
+                // TODO: how to detect encoding properly?
+                // TODO: params?
+                return new PostData
+                {
+                    MimeType = Headers.ContentType.MediaType,
+                    Text = Convert.ToBase64String(bytes)
+                };
+            }
+            else
+            {
+                return null;
+            }
         }
         internal async Task<Content> GetContent()
         {
             var bytes = await bytesAsync.ConfigureAwait(false);
-            return new Content
+            if (bytes.Length == 0)
             {
-                MimeType = Headers.ContentType.MediaType,
-                // TODO: smoke tests indicate that ContentEncoding is not set, and ContentType.CharSet is what we want
-                Encoding = string.Join(",", Headers.ContentEncoding),
-                Size = bytes.Length,
-                Text = Convert.ToBase64String(bytes),
-            };
+                return new Content
+                {
+                    MimeType = "text/plain",
+                    Size = 0,
+                    Text = ""
+                };
+            }
+            else
+            {
+                return new Content
+                {
+                    MimeType = Headers.ContentType.MediaType,
+                    // TODO: smoke tests indicate that ContentEncoding is not set, and ContentType.CharSet is what we want
+                    Encoding = string.Join(",", Headers.ContentEncoding),
+                    Size = bytes.Length,
+                    Text = Convert.ToBase64String(bytes),
+                };
+            }
         }
 
         protected override async Task SerializeToStreamAsync(Stream stream, TransportContext context)

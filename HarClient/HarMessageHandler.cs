@@ -43,7 +43,7 @@ namespace JBlam.HarClient
         // TODO: move this somewhere discoverable
         public static JsonSerializerSettings HarSerializerSettings { get; } = new JsonSerializerSettings
         {
-            ContractResolver = new CamelCasePropertyNamesContractResolver(),
+            ContractResolver = new HarContractResolver(),
             NullValueHandling = NullValueHandling.Ignore,
             DateFormatHandling = DateFormatHandling.IsoDateFormat,
         };
