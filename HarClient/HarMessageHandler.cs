@@ -60,9 +60,12 @@ namespace JBlam.HarClient
             };
             entries.Add(entry);
             var response = await base.SendAsync(request, cancellationToken);
+
+            // at the point where we've a defined "response", we have at least retrieved the
+            // headers, so this is unfairly allocating time to "send" which should go in "receive".
+            entry.Timings.Send = stopwatch.ElapsedMilliseconds;
+            entry.Response = response.CreateHarResponse();
             entry.Time = stopwatch.ElapsedMilliseconds;
-            
-            // TODO: capture response into HAR entry
             return response;
         }
 

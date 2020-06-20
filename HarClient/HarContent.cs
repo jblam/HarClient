@@ -28,8 +28,20 @@ namespace JBlam.HarClient
             // TODO: params?
             return new PostData
             {
-                MimeType = "text/base64",
+                MimeType = Headers.ContentType.MediaType,
                 Text = Convert.ToBase64String(bytes)
+            };
+        }
+        internal async Task<Content> GetContent()
+        {
+            var bytes = await bytesAsync.ConfigureAwait(false);
+            return new Content
+            {
+                MimeType = Headers.ContentType.MediaType,
+                // TODO: smoke tests indicate that ContentEncoding is not set, and ContentType.CharSet is what we want
+                Encoding = string.Join(",", Headers.ContentEncoding),
+                Size = bytes.Length,
+                Text = Convert.ToBase64String(bytes),
             };
         }
 
