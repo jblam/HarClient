@@ -12,15 +12,15 @@ namespace HarClient.Tests.Mocks
     [TestClass]
     public class MockServerHandlerBehaviour
     {
-        static MockServerHandler Create()
+        static MockServerHandler CreateHandler()
         {
             return new MockServerHandler
             {
                 Responses =
                 {
-                    { "http://mockserverhandler/created", HttpMethod.Get, new HttpResponseMessage(HttpStatusCode.Created) },
+                    { "created", HttpMethod.Get, new HttpResponseMessage(HttpStatusCode.Created) },
                     {
-                        "http://mockserverhandler/test",
+                        "test",
                         HttpMethod.Get,
                         new HttpResponseMessage(HttpStatusCode.OK)
                         {
@@ -28,50 +28,48 @@ namespace HarClient.Tests.Mocks
                         }
                     },
                     {
-                        "http://mockserverhandler/redirect",
+                        "redirect",
                         HttpMethod.Get,
                         new HttpResponseMessage(HttpStatusCode.Redirect)
                         {
                             Headers =
                             {
-                                Location = new Uri("http://mockserverhandler/test")
+                                Location = new Uri(MockServerHandler.BaseUri, "/test")
                             }
                         }
                     },
                     {
-                        "http://mockserverhandler/broken", HttpMethod.Get, new HttpRequestException("Out of peanuts")
+                        "broken", HttpMethod.Get, new HttpRequestException("Out of peanuts")
                     }
                 }
             };
         }
 
+        static readonly HttpClient client = CreateHandler().CreateClient();
+
         [TestMethod]
         public async Task GetsContent()
         {
-            var client = new HttpClient(Create());
-            var response = await client.GetAsync("http://mockserverhandler/test");
+            var response = await client.GetAsync("test");
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
             Assert.AreEqual("Test", await response.Content.ReadAsStringAsync());
         }
         [TestMethod]
         public async Task Redirects()
         {
-            var client = new HttpClient(Create());
-            var response = await client.GetAsync("http://mockserverhandler/redirect");
+            var response = await client.GetAsync("redirect");
             Assert.AreEqual(HttpStatusCode.Redirect, response.StatusCode);
-            Assert.AreEqual(new Uri("http://mockserverhandler/test"), response.Headers.Location);
+            Assert.AreEqual(new Uri(MockServerHandler.BaseUri, "test"), response.Headers.Location);
         }
         [TestMethod, ExpectedException(typeof(TestException))]
         public async Task ThrowsIfUnexpectedRequest()
         {
-            var client = new HttpClient(Create());
             await client.GetAsync("http://garbage.url");
         }
         [TestMethod, ExpectedException(typeof(HttpRequestException))]
         public async Task ReturnsExceptionResponseAsDefined()
         {
-            var client = new HttpClient(Create());
-            _ = await client.GetAsync("http://mockserverhandler/broken");
+            _ = await client.GetAsync("broken");
         }
     }
 }

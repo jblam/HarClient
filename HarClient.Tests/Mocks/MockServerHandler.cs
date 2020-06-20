@@ -9,8 +9,8 @@ using System.Threading.Tasks;
 
 namespace HarClient.Tests.Mocks
 {
-    using RequestKey = ValueTuple<string, HttpMethod>;
-    using RequestDictionary = IDictionary<ValueTuple<string, HttpMethod>, Task<HttpResponseMessage>>;
+    using RequestKey = ValueTuple<Uri, HttpMethod>;
+    using RequestDictionary = IDictionary<ValueTuple<Uri, HttpMethod>, Task<HttpResponseMessage>>;
 
     class MockServerHandler : HttpMessageHandler
     {
@@ -34,13 +34,20 @@ namespace HarClient.Tests.Mocks
         // - repsonse can be an instance of HttpResponseMessage, or Task<HttpResponseMessage> (resolvable through
         //   TaskCompletionSource<T>)
 
+        public static Uri BaseUri { get; } = new Uri("http://mockserverhandler");
+
+        public HttpClient CreateClient() => new HttpClient(this)
+        {
+            BaseAddress = BaseUri
+        };
+
         public RequestDictionary Responses { get; } =
             new Dictionary<RequestKey, Task<HttpResponseMessage>>();
 
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var path = request.RequestUri.OriginalString;
+            var path = request.RequestUri;
             var method = request.Method;
             if (Responses.TryGetValue((path, method), out var response))
                 return response;
@@ -49,11 +56,12 @@ namespace HarClient.Tests.Mocks
     }
     static class RequestDictionaryExtensions
     {
+        static Uri RelativeUri(this string s) => new Uri(MockServerHandler.BaseUri, s);
         public static void Add(this RequestDictionary requests, string path, HttpMethod method, HttpRequestException exception) =>
-            requests.Add((path, method), Task.FromException<HttpResponseMessage>(exception));
+            requests.Add((path.RelativeUri(), method), Task.FromException<HttpResponseMessage>(exception));
         public static void Add(this RequestDictionary requests, string path, HttpMethod method, HttpResponseMessage message) =>
-            requests.Add((path, method), Task.FromResult(message));
+            requests.Add((path.RelativeUri(), method), Task.FromResult(message));
         public static void Add(this RequestDictionary requests, string path, HttpMethod method, Task<HttpResponseMessage> task) =>
-            requests.Add((path, method), task);
+            requests.Add((path.RelativeUri(), method), task);
     }
 }
