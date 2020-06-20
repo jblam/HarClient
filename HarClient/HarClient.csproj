@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;netcoreapp2.1</TargetFrameworks>
     <RootNamespace>JBlam.HarClient</RootNamespace>
+    <AssemblyName>JBlam.HarClient</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

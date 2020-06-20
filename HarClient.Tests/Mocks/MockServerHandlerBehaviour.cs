@@ -4,7 +4,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace HarClient.Tests.Mocks
+namespace JBlam.HarClient.Tests.Mocks
 {
     /// <summary>
     /// Meta-tests to assert the behaviour of the mock object.

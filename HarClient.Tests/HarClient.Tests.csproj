@@ -4,6 +4,10 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
 
     <IsPackable>false</IsPackable>
+
+    <RootNamespace>JBlam.HarClient.Tests</RootNamespace>
+
+    <AssemblyName>JBlam.HarClient.Tests</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

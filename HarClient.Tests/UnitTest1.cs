@@ -1,4 +1,4 @@
-using HarClient.Tests.Mocks;
+using JBlam.HarClient.Tests.Mocks;
 using JBlam.HarClient;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
@@ -7,7 +7,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace HarClient.Tests
+namespace JBlam.HarClient.Tests
 {
     // TODO: design unit tests properly.
 

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace HarClient.Tests
+namespace JBlam.HarClient.Tests
 {
     /// <summary>
     /// Exception type for any exceptions thrown in the course of running an automated test.

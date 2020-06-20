@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace HarClient.Tests.Mocks
+namespace JBlam.HarClient.Tests.Mocks
 {
     using RequestKey = ValueTuple<Uri, HttpMethod>;
     using RequestDictionary = IDictionary<ValueTuple<Uri, HttpMethod>, Task<HttpResponseMessage>>;
