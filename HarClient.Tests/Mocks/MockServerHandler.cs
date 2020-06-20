@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 
 namespace JBlam.HarClient.Tests.Mocks
 {
-    using RequestKey = ValueTuple<Uri, HttpMethod>;
     using RequestDictionary = IDictionary<ValueTuple<Uri, HttpMethod>, Task<HttpResponseMessage>>;
 
     class MockServerHandler : HttpMessageHandler
@@ -42,7 +41,7 @@ namespace JBlam.HarClient.Tests.Mocks
         };
 
         public RequestDictionary Responses { get; } =
-            new Dictionary<RequestKey, Task<HttpResponseMessage>>();
+            new Dictionary<(Uri, HttpMethod), Task<HttpResponseMessage>>();
 
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -53,15 +52,5 @@ namespace JBlam.HarClient.Tests.Mocks
                 return response;
             throw new TestException($"No response defined for [{method} {path}]");
         }
-    }
-    static class RequestDictionaryExtensions
-    {
-        static Uri RelativeUri(this string s) => new Uri(MockServerHandler.BaseUri, s);
-        public static void Add(this RequestDictionary requests, string path, HttpMethod method, HttpRequestException exception) =>
-            requests.Add((path.RelativeUri(), method), Task.FromException<HttpResponseMessage>(exception));
-        public static void Add(this RequestDictionary requests, string path, HttpMethod method, HttpResponseMessage message) =>
-            requests.Add((path.RelativeUri(), method), Task.FromResult(message));
-        public static void Add(this RequestDictionary requests, string path, HttpMethod method, Task<HttpResponseMessage> task) =>
-            requests.Add((path.RelativeUri(), method), task);
     }
 }
