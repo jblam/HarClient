@@ -1,7 +1,9 @@
+using HarClient.Tests.Mocks;
 using JBlam.HarClient;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -36,9 +38,19 @@ namespace HarClient.Tests
         [TestMethod]
         public async Task LogsLocalhost()
         {
-            var sut = new HarMessageHandler();
-            var client = new HttpClient(sut);
-            _ = await client.GetAsync("http://example.net");
+            var mock = new MockServerHandler
+            {
+                Responses =
+                {
+                    { "test", HttpMethod.Post, new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("OK") } }
+                }
+            };
+            var sut = new HarMessageHandler(mock);
+            var client = new HttpClient(sut)
+            {
+                BaseAddress = MockServerHandler.BaseUri
+            };
+            _ = await client.PostAsync("test", new StringContent("Hello"));
             var har = sut.CreateHar();
             var harString = JsonConvert.SerializeObject(har, HarMessageHandler.HarSerializerSettings);
             Assert.IsNotNull(har);
