@@ -9,7 +9,7 @@ namespace JBlam.HarClient.Tests
     /// This exception indicates that the test code itself has a bug. This should only be
     /// caught or expected in meta-tests.
     /// </remarks>
-    [System.Serializable]
+    [Serializable]
     public class TestException : Exception
     {
         public TestException() { }

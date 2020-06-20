@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Net;
 using System.Net.Http;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,22 +13,19 @@ namespace JBlam.HarClient.Tests.Mocks
         // Design principle: this class should have the exact same observable behaviour
         // as SocketsHttpHandler and HttpClientHandler. Any behaviour outside what they
         // do is out-of-scope for now.
-        //
-        // Testing use-cases:
-        // - GET resource, receive 200OK + some content
-        // - POST some content, receive 200OK + some content
-        // - POST / redirect / GET
-        // - PUT some content, receive 201Created (no content)
-        // - GET a resource, receive 3xx redirect; GET redirect target, receieve 200OK + some content
-        // - POST some content, receive 405 method not allowed w/ headers
-        // - ... something to do with 100 Continue
-        // - any kind of request, unreachable
-        // - a request which returns some content, but the HAR is observed before the content arrives
-        //
-        // Requirements:
-        // - mapping of URL to response (required so that redirects can resolve themselves without intervention)
-        // - repsonse can be an instance of HttpResponseMessage, or Task<HttpResponseMessage> (resolvable through
-        //   TaskCompletionSource<T>)
+
+        // SPEC:
+        // - Requestable resources are specified by URL and method
+        //   > More than one resource is specifiable, such that tests can perform a sequence of
+        //   > requests using the same client/handler.
+        // - The response behaviour is specified in advance as a Task<HttpResponseMessage>, or an
+        //   object convertable to Task<HttpResponseMessage>
+        //   > HttpResponseMessage is specified directly so that there is no intermediate
+        //   > implementation which also requires testing.
+        //   > By returning HttpResponseMessage, the test suite is exactly as expressive as the
+        //   > System.Net.Http library itself.
+        // - An exception is thrown upon any request for a URL or method which was not explicitly specified
+        //   > An unexpected request URL indicates that the test itself is broken.
 
         public static Uri BaseUri { get; } = new Uri("http://mockserverhandler");
 
