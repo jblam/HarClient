@@ -15,8 +15,8 @@ namespace JBlam.HarClient.Tests.Validation
     {
         public static void IsValid(Har har) =>
             IsValidLog(JAssert.HasObjectProperty(har.ToJObject(), "log"));
-        static JObject ToJObject(this Har har) =>
-            JObject.FromObject(har, new JsonSerializer
+        static JObject ToJObject(this object o) =>
+            JObject.FromObject(o, new JsonSerializer
             {
                 ContractResolver = HarMessageHandler.HarSerializerSettings.ContractResolver,
                 DateFormatHandling = HarMessageHandler.HarSerializerSettings.DateFormatHandling,
@@ -117,36 +117,6 @@ namespace JBlam.HarClient.Tests.Validation
                     AssertHasOptionalNumberOrMinusOne(timings, "ssl"),
                 }.Aggregate((u, v) => !u.HasValue ? v : u + v.GetValueOrDefault());
             }
-            static void AssertIsValidRequest(JObject request)
-            {
-                _ = JAssert.HasStringProperty(request, "method");
-                _ = JAssert.HasStringProperty(request, "url");
-                _ = JAssert.HasStringProperty(request, "httpVersion");
-                AssertIsValidCookies(JAssert.HasArrayProperty(request, "cookies"));
-                AssertIsValidRecords(JAssert.HasArrayProperty(request, "headers"));
-                AssertIsValidRecords(JAssert.HasArrayProperty(request, "queryString"));
-                if (JAssert.HasOptionalObjectProperty(request, "postData") is JObject o)
-                    AssertIsValidPostData(o);
-                AssertIsNumberOrMinusOne(request, "headersSize");
-                AssertIsNumberOrMinusOne(request, "bodySize");
-                _ = HasOptionalComment(request);
-
-                static void AssertIsValidPostData(JObject postData)
-                {
-                    _ = JAssert.HasStringProperty(postData, "mimeType");
-                    foreach (var item in JAssert.HasArrayProperty(postData, "params"))
-                    {
-                        var p = JAssert.IsObject(item);
-                        _ = JAssert.HasStringProperty(p, "name");
-                        _ = JAssert.HasOptionalStringProperty(p, "value");
-                        _ = JAssert.HasOptionalStringProperty(p, "fileName");
-                        _ = JAssert.HasOptionalStringProperty(p, "contentType");
-                        _ = HasOptionalComment(p);
-                    }
-                    _ = JAssert.HasStringProperty(postData, "text");
-                    _ = HasOptionalComment(postData);
-                }
-            }
 
             static void AssertIsValidCache(JObject cache)
             {
@@ -171,27 +141,59 @@ namespace JBlam.HarClient.Tests.Validation
                     }
                 }
             }
-            static void AssertIsValidResponse(JObject response)
-            {
-                _ = JAssert.HasProperty(response, "status", JTokenType.Integer);
-                _ = JAssert.HasStringProperty(response, "statusText");
-                _ = JAssert.HasStringProperty(response, "httpVersion");
-                AssertIsValidCookies(JAssert.HasArrayProperty(response, "cookies"));
-                AssertIsValidRecords(JAssert.HasArrayProperty(response, "headers"));
-                AssertIsValidContent(JAssert.HasObjectProperty(response, "content"));
-                _ = JAssert.HasStringProperty(response, "redirectURL");
-                AssertIsNumberOrMinusOne(response, "headersSize");
-                AssertIsNumberOrMinusOne(response, "bodySize");
-                _ = HasOptionalComment(response);
+        }
+        public static void IsValidRequest(Request request) => AssertIsValidRequest(request.ToJObject());
+        static void AssertIsValidRequest(JObject request)
+        {
+            _ = JAssert.HasStringProperty(request, "method");
+            _ = JAssert.HasProperty(request, "url", JTokenType.Uri);
+            _ = JAssert.HasStringProperty(request, "httpVersion");
+            AssertIsValidCookies(JAssert.HasArrayProperty(request, "cookies"));
+            AssertIsValidRecords(JAssert.HasArrayProperty(request, "headers"));
+            AssertIsValidRecords(JAssert.HasArrayProperty(request, "queryString"));
+            if (JAssert.HasOptionalObjectProperty(request, "postData") is JObject o)
+                AssertIsValidPostData(o);
+            AssertIsNumberOrMinusOne(request, "headersSize");
+            AssertIsNumberOrMinusOne(request, "bodySize");
+            _ = HasOptionalComment(request);
 
-                static void AssertIsValidContent(JObject content)
+            static void AssertIsValidPostData(JObject postData)
+            {
+                _ = JAssert.HasStringProperty(postData, "mimeType");
+                foreach (var item in JAssert.HasArrayProperty(postData, "params"))
                 {
-                    _ = JAssert.HasProperty(content, "size", JTokenType.Integer);
-                    _ = JAssert.HasOptionalProperty(content, "compression", JTokenType.Integer);
-                    _ = JAssert.HasStringProperty(content, "mimeType");
-                    _ = JAssert.HasOptionalStringProperty(content, "text");
-                    _ = HasOptionalComment(content);
+                    var p = JAssert.IsObject(item);
+                    _ = JAssert.HasStringProperty(p, "name");
+                    _ = JAssert.HasOptionalStringProperty(p, "value");
+                    _ = JAssert.HasOptionalStringProperty(p, "fileName");
+                    _ = JAssert.HasOptionalStringProperty(p, "contentType");
+                    _ = HasOptionalComment(p);
                 }
+                _ = JAssert.HasStringProperty(postData, "text");
+                _ = HasOptionalComment(postData);
+            }
+        }
+        public static void IsValidResponse(Response response) => AssertIsValidResponse(response.ToJObject());
+        static void AssertIsValidResponse(JObject response)
+        {
+            _ = JAssert.HasProperty(response, "status", JTokenType.Integer);
+            _ = JAssert.HasStringProperty(response, "statusText");
+            _ = JAssert.HasStringProperty(response, "httpVersion");
+            AssertIsValidCookies(JAssert.HasArrayProperty(response, "cookies"));
+            AssertIsValidRecords(JAssert.HasArrayProperty(response, "headers"));
+            AssertIsValidContent(JAssert.HasObjectProperty(response, "content"));
+            _ = JAssert.HasStringProperty(response, "redirectURL");
+            AssertIsNumberOrMinusOne(response, "headersSize");
+            AssertIsNumberOrMinusOne(response, "bodySize");
+            _ = HasOptionalComment(response);
+
+            static void AssertIsValidContent(JObject content)
+            {
+                _ = JAssert.HasProperty(content, "size", JTokenType.Integer);
+                _ = JAssert.HasOptionalProperty(content, "compression", JTokenType.Integer);
+                _ = JAssert.HasStringProperty(content, "mimeType");
+                _ = JAssert.HasOptionalStringProperty(content, "text");
+                _ = HasOptionalComment(content);
             }
         }
         static void AssertIsValidCookies(JArray cookies)

@@ -17,7 +17,6 @@ namespace JBlam.HarClient
                 BodySize = GetBodySize(httpRequest.Content),
                 HttpVersion = httpRequest.Version.ToString(),
                 Method = httpRequest.Method.Method,
-                PostData = new PostData(),
                 Url = httpRequest.RequestUri,
             };
             output.Headers.AddRange(httpRequest.Headers.Select(AsHeader));
