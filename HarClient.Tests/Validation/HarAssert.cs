@@ -38,6 +38,10 @@ namespace JBlam.HarClient.Tests.Validation
             AssertValidEntries(
                 JAssert.HasArrayProperty(log, "entries"), pageIds);
             _ = HasOptionalComment(log);
+
+            // Log the full JSON to the standard output; we can collect this from the test explorer
+            // and put it into the online HAR validator
+            Console.WriteLine(log.Root.ToString());
         }
         static void AssertIsValidCreatorBrowser(JObject creator)
         {
