@@ -13,6 +13,15 @@ namespace JBlam.HarClient.Tests.Validation
 {
     static class HarAssert
     {
+        // JB 2020-06-21
+        // JSON Schema may be a fairly standard way to solve the problem "does this serialise to a
+        // valid document"; however
+        // - JSON.NET's schema implementation is payware
+        // - probably took about as long to write this imperative code as it would've to find and
+        //   configure a schema validation library
+        // - unsure if a valid JSON schmema document for HAR is available (softwareishard has some
+        //   kind of imperative script arrangement)
+
         public static void IsValid(Har har) =>
             IsValidLog(JAssert.HasObjectProperty(har.ToJObject(), "log"));
         static JObject ToJObject(this object o) =>
