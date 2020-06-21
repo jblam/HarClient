@@ -21,7 +21,7 @@ namespace JBlam.HarClient
 
         readonly Task<byte[]> bytesAsync;
 
-        internal async Task<PostData> GetPostData()
+        internal async Task<PostData?> GetPostData()
         {
             var bytes = await bytesAsync.ConfigureAwait(false);
             if (bytes.Length > 0)
@@ -36,6 +36,8 @@ namespace JBlam.HarClient
             }
             else
             {
+                // Zero-length content is used because .NET separates the "content headers" from
+                // the other headers. From HAR's perspective, there is no post data.
                 return null;
             }
         }

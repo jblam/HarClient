@@ -84,7 +84,7 @@ namespace JBlam.HarClient
         readonly List<Entry> entries = new List<Entry>();
 
         public Har CreateHar() => CreateHar(null);
-        public Har CreateHar(string comment)
+        public Har CreateHar(string? comment)
         {
             var output = new Har
             {
