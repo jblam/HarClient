@@ -12,12 +12,10 @@ namespace JBlam.HarClient.Tests
     [TestClass]
     public class HarSerialisationBehaviour
     {
-        static Har CreateEmptyHar() => new HarMessageHandler().CreateHar();
-
         [TestMethod]
         public void EmptyHarIsValid()
         {
-            var har = CreateEmptyHar();
+            var har = new HarMessageHandler().CreateHar();
             HarAssert.IsValid(har);
         }
 
