@@ -54,7 +54,10 @@ namespace JBlam.HarClient.Tests
                 }
             };
             var harRequest = multipartRequest.CreateHarRequest();
-            Assert.IsTrue(harRequest.PostData.Params.Any());
+            if (!harRequest.PostData.Params.Any())
+            {
+                throw new TestException("Multipart content is expected to produce postData params");
+            }
             HarAssert.IsValidRequest(harRequest);
         }
 
