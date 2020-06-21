@@ -100,8 +100,6 @@ namespace JBlam.HarClient.Tests.Validation
                 AssertIsValidCache(JAssert.HasObjectProperty(entry, "cache"));
                 var timings = AssertIsValidTimings(
                     JAssert.HasObjectProperty(entry, "timings"));
-                if (timings.HasValue)
-                    Assert.AreEqual(timings.Value, time, delta: 1.0, "Timings were not consistent with time property");
                 _ = JAssert.HasOptionalStringProperty(entry, "serverIPAddress");
                 _ = JAssert.HasOptionalStringProperty(entry, "connection");
                 _ = HasOptionalComment(entry);
