@@ -36,7 +36,6 @@ namespace JBlam.HarClient
             {
                 BodySize = GetBodySize(httpResponse.Content),
                 HttpVersion = httpResponse.Version.ToString(),
-                // TODO: RedirectUrl is required; needs to serialise as empty-string if value is null
                 RedirectUrl = httpResponse.Headers.Location,
                 Status = (int)httpResponse.StatusCode,
                 StatusText = httpResponse.ReasonPhrase,
