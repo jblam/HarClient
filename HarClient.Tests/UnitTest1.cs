@@ -28,14 +28,6 @@ namespace JBlam.HarClient.Tests
         // They should be removed ASAP
         #region temp smoke tests
         [TestMethod]
-        public void CreatesEmptyHar()
-        {
-            var har = new HarMessageHandler().CreateHar();
-            var harString = JsonConvert.SerializeObject(har, HarMessageHandler.HarSerializerSettings);
-            Assert.IsNotNull(har);
-        }
-
-        [TestMethod]
         public async Task LogsLocalhost()
         {
             var (sut, client) = MockClient.Create(

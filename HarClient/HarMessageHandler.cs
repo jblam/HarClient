@@ -43,6 +43,8 @@ namespace JBlam.HarClient
         // TODO: move this somewhere discoverable
         public static JsonSerializerSettings HarSerializerSettings { get; } = new JsonSerializerSettings
         {
+            // Note that changes here must be kept in sync with the test project's
+            // HarAssert.ToJObject(object) implementation.
             ContractResolver = new HarContractResolver(),
             NullValueHandling = NullValueHandling.Ignore,
             DateFormatHandling = DateFormatHandling.IsoDateFormat,
@@ -84,7 +86,7 @@ namespace JBlam.HarClient
         readonly List<Entry> entries = new List<Entry>();
 
         public Har CreateHar() => CreateHar(null);
-        public Har CreateHar(string comment)
+        public Har CreateHar(string? comment)
         {
             var output = new Har
             {

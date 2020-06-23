@@ -4,6 +4,8 @@
     <TargetFrameworks>netstandard2.0;netcoreapp2.1</TargetFrameworks>
     <RootNamespace>JBlam.HarClient</RootNamespace>
     <AssemblyName>JBlam.HarClient</AssemblyName>
+    <LangVersion>8.0</LangVersion>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
