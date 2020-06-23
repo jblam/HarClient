@@ -42,7 +42,6 @@ namespace JBlam.HarClient.Tests
         [TestMethod]
         public void MultipartFormContentRequestIsValid()
         {
-            // TODO: resesarch expected behaviour
             var multipartRequest = new HttpRequestMessage(HttpMethod.Post, "http://example.net")
             {
                 Content = new MultipartFormDataContent
@@ -59,8 +58,6 @@ namespace JBlam.HarClient.Tests
             HarAssert.IsValidRequest(harRequest);
         }
 
-        // TODO: research expected behaviour with binary content.
-
         [TestMethod]
         public void StringContentResponseIsValid()
         {
@@ -72,9 +69,5 @@ namespace JBlam.HarClient.Tests
             Assert.IsNotNull(harResponse.Content?.Text);
             HarAssert.IsValidResponse(harResponse);
         }
-
-        // TODO: research expected behaviour with binary content.
-
-        // TODO: research how encoding should work in HAR content.
     }
 }

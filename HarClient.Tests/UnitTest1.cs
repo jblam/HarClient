@@ -9,23 +9,11 @@ using System.Threading.Tasks;
 
 namespace JBlam.HarClient.Tests
 {
-    // TODO: design unit tests properly.
-
-    // Wishlist:
-    // - synthesize HTTP traffic for inputs { GET, POST, etc. } × outputs { 200, 201, 3xx, 4xx, 5xx }
-    // Investigate:
-    // - expected behaviour for cancelled requests
-    // - possibility of producing a <timings> object
-    // - possibility of producing header content sizes
-    // Test that:
-    // - ensure "one time only" content is serialised exactly once
-    // - respect content encodings for strings (minimal UTF-x).
-    // - produce base64 for non-string encodings
     [TestClass]
     public class UnitTest1
     {
         // JB 2020-06-19: the following are smoke tests supporting initial exploratory development.
-        // They should be removed ASAP
+        // TODO: remove this as part of issue #12
         #region temp smoke tests
         [TestMethod]
         public async Task LogsLocalhost()
