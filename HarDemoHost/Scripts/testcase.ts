@@ -14,7 +14,19 @@ export const arr: ReadonlyArray<ITestCase> = [
     }),
     fetchTestCase("Accepted with redirect", "/api/behaviour/accepted?location=/api/behaviour/content", { method: 'POST' }),
     fetchTestCase("Get XML", "/api/behaviour/content", { headers: { Accept: 'application/xml' } }),
-]
+    {
+        name: "GET binary content, POST back",
+        run: async () => {
+            let imageResponse = await fetch("/chemistry-dog.jpg");
+            let imageData = await imageResponse.blob();
+            await fetch("/api/behaviour/accepted", {
+                method: 'POST',
+                headers: { "Content-Type": imageResponse.headers.get("Content-Type") },
+                body: imageData
+            });
+        }
+    }
+];
 
 function fetchTestCase(name: string, input: RequestInfo, init?: RequestInit): ITestCase {
     return {
