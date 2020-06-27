@@ -75,7 +75,7 @@ export const arr: ReadonlyArray<ITestCase> = [
             let abort = new AbortController();
             let fetchResult = fetch("/api/behaviour/delay?delay_ms=5000",
                 { signal: abort.signal });
-            setTimeout(() => abort.abort(), 10);
+            setTimeout(() => abort.abort(), 100);
             return fetchResult;
         }
     },
