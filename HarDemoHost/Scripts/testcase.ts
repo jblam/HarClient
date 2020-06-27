@@ -1,6 +1,9 @@
 ﻿export interface ITestCase {
     readonly name: string;
-    run: () => Promise<any>;
+    run: (results: ITestCaseResults) => Promise<any>;
+}
+export interface ITestCaseResults {
+    [k: string]: Promise<any>;
 }
 
 export const arr: ReadonlyArray<ITestCase> = [
@@ -15,17 +18,56 @@ export const arr: ReadonlyArray<ITestCase> = [
     fetchTestCase("Accepted with redirect", "/api/behaviour/accepted?location=/api/behaviour/content", { method: 'POST' }),
     fetchTestCase("Get XML", "/api/behaviour/content", { headers: { Accept: 'application/xml' } }),
     {
-        name: "GET binary content, POST back",
-        run: async () => {
-            let imageResponse = await fetch("/chemistry-dog.jpg");
-            let imageData = await imageResponse.blob();
+        name: "GET binary content",
+        run: async () => await (await fetch("/chemistry-dog.jpg")).blob()
+    },
+    {
+        name: "POST binary content",
+        run: async (results) => {
+            let blob = await results["GET binary content"];
             await fetch("/api/behaviour/accepted", {
                 method: 'POST',
-                headers: { "Content-Type": imageResponse.headers.get("Content-Type") },
-                body: imageData
+                headers: { "Content-Type": "image/jpg" },
+                body: blob
             });
         }
-    }
+    },
+    {
+        name: "POST multipart form with binary",
+        run: async (results) => {
+            // get the blob out of the previous test result,
+            // append it to the form, producing application/form-multipart
+            let blob = await results["GET binary content"];
+            let formData = new FormData();
+            formData.append("textData", "text");
+            formData.append("imageData", blob, "image.jpg");
+            await fetch("/api/behaviour/accepted", {
+                method: 'POST',
+                body: formData
+            });
+        }
+    },
+    fetchTestCase("POST multipart form", "/api/behaviour/accepted", {
+        method: 'POST',
+        body: (() => {
+            // produces application/form-multipart
+            let f = new FormData();
+            f.append("x", "x");
+            f.append("y", "a+b+c/d:e?f");
+            return f;
+        })()
+    }),
+    fetchTestCase("POST urlencoded", "/api/behaviour/accepted", {
+        method: 'POST',
+        body: (() => {
+            // produces application/x-www-form-urlencoded
+            // equivalent to an actual genuine <form>
+            let p = new URLSearchParams();
+            p.append("x", "x");
+            p.append("y", "a+b+c/d:e?f");
+            return p;
+        })()
+    }),
 ];
 
 function fetchTestCase(name: string, input: RequestInfo, init?: RequestInit): ITestCase {

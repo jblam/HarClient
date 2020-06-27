@@ -20,6 +20,7 @@ function addButtonListener(): boolean {
     async function asdf(cases: ReadonlyArray<tests.ITestCase>, status: HTMLTableElement) {
         var tbody = document.createElement("tbody");
         status.appendChild(tbody);
+        var results: tests.ITestCaseResults = {};
         for (const c of cases) {
             var tr = document.createElement("tr");
             var nameCell = document.createElement("td");
@@ -30,7 +31,9 @@ function addButtonListener(): boolean {
             nameCell.textContent = c.name;
             statusCell.textContent = "Running";
             try {
-                await c.run();
+                var thisResult = c.run(results);
+                results[c.name] = thisResult;
+                await thisResult;
                 statusCell.textContent = "Complete";
             } catch (err) {
                 statusCell.textContent = (err || "Failed").toString();
