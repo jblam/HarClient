@@ -12,9 +12,8 @@ namespace HarDemoHost.Controllers
     [ApiController]
     public class BehaviourController : ControllerBase
     {
-
         [HttpGet, HttpPost, Route("content")]
-        public IActionResult DoContent() => Ok(new SomeContent { Content = "Content", Collection = { 1, 2, } });
+        public IActionResult DoContent() => Ok(new SomeContent { Content = "Content 🚀", Collection = { 1, 2, } });
 
         [HttpPost, Route("accepted")]
         public IActionResult DoAccepted([FromQuery] string location = null) => Accepted(location);
@@ -34,11 +33,31 @@ namespace HarDemoHost.Controllers
             await Task.Delay(delay_ms, cancellationToken);
             return NoContent();
         }
-    }
 
-    public class SomeContent
-    {
-        public string Content { get; set; }
-        public IList<int> Collection { get; } = new List<int>();
+        [HttpPost, Route("set-cookie")]
+        public IActionResult SetCookie()
+        {
+            Response.Cookies.Append("key", "value", new CookieOptions { Path = "/api", SameSite = SameSiteMode.Strict });
+            return NoContent();
+        }
+
+        [HttpGet("check-cookie")]
+        public IActionResult CheckCookie()
+        {
+            if (Request.Cookies.Any())
+            {
+                return Ok(Request.Cookies.Select(kv => $"{kv.Key}={kv.Value}"));
+            }
+            else
+            {
+                return BadRequest("No cookies 🙁");
+            }
+        }
+
+        class SomeContent
+        {
+            public string Content { get; set; }
+            public IList<int> Collection { get; } = new List<int>();
+        }
     }
 }

@@ -5,6 +5,7 @@
 export interface ITestCaseResults {
     [k: string]: Promise<any>;
 }
+document.cookie = "key=value;path=/api;expires=Thu, 01-Jan-1970 00:00:01 GMT";
 
 export const arr: ReadonlyArray<ITestCase> = [
     fetchTestCase("OK", "/api/behaviour/content"),
@@ -76,6 +77,26 @@ export const arr: ReadonlyArray<ITestCase> = [
                 { signal: abort.signal });
             setTimeout(() => abort.abort(), 10);
             return fetchResult;
+        }
+    },
+    {
+        name: "POST set cookies",
+        run: async () => {
+            var response = await fetch("/api/behaviour/set-cookie", { method: 'POST' });
+            if (!document.cookie) {
+                throw new Error("`document.cookie` is still empty");
+            }
+        }
+    },
+    {
+        name: "GET check cookies",
+        run: async () => {
+            var response = await fetch("/api/behaviour/check-cookie", {
+                credentials: "same-origin"
+            });
+            if (response.status > 299) {
+                throw new Error("Cookie check failed");
+            }
         }
     }
 ];
