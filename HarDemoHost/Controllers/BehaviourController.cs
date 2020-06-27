@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -26,6 +27,13 @@ namespace HarDemoHost.Controllers
 
         [Route("not-found")]
         public IActionResult DoNotFound() => NotFound();
+
+        [Route("delay")]
+        public async Task<IActionResult> DelayNoContent(CancellationToken cancellationToken, [FromQuery] int delay_ms = 0)
+        {
+            await Task.Delay(delay_ms, cancellationToken);
+            return NoContent();
+        }
     }
 
     public class SomeContent

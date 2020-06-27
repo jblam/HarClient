@@ -68,6 +68,16 @@ export const arr: ReadonlyArray<ITestCase> = [
             return p;
         })()
     }),
+    {
+        name: "cancelled request",
+        run: async () => {
+            let abort = new AbortController();
+            let fetchResult = fetch("/api/behaviour/delay?delay_ms=5000",
+                { signal: abort.signal });
+            setTimeout(() => abort.abort(), 10);
+            return fetchResult;
+        }
+    }
 ];
 
 function fetchTestCase(name: string, input: RequestInfo, init?: RequestInit): ITestCase {
