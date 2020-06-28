@@ -95,7 +95,16 @@ export const arr: ReadonlyArray<ITestCase> = [
             let fetchResult = fetch("/api/behaviour/delay?delay_ms=5000",
                 { signal: abort.signal });
             setTimeout(() => abort.abort(), 100);
-            return fetchResult;
+            try {
+                await fetchResult;
+                throw new Error("The aborted request unexpectedly completed");
+            } catch (err) {
+                if (err instanceof DOMException && err.name == "AbortError") {
+                    return err;
+                } else {
+                    throw new Error(`Unexpected error: ${err.toString()}`);
+                }
+            }
         }
     },
     fetchTestCase("POST set cookies", { input: "/api/behaviour/set-cookie", init: { method: 'POST' } }),
