@@ -1,0 +1,7 @@
+﻿.loading .load {
+    visibility: hidden;
+}
+.loading .load::before {
+    visibility: visible;
+    content: 'Loading…';
+}
