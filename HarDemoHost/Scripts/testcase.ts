@@ -23,7 +23,15 @@ export const arr: ReadonlyArray<ITestCase> = [
             throw new Error("Expected HTTP status 404, but received " + r.status);
     }),
     fetchTestCase("Accepted with redirect", { input: "/api/behaviour/accepted?location=/api/behaviour/content", init: { method: 'POST' } }),
-    fetchTestCase("Get XML", { input: "/api/behaviour/content", init: { headers: { Accept: 'application/xml' } } }),
+    fetchTestCase("Get XML",
+        { input: "/api/behaviour/content", init: { headers: { Accept: 'application/xml' } } },
+        response => {
+            assertIsSuccess(response);
+            if (!response.headers.get("content-type").startsWith("application/xml")) {
+                throw new Error("Server did not provide XML; probably reverted to JSON");
+            }
+        }
+    ),
     {
         name: "GET binary content",
         run: async () => {
