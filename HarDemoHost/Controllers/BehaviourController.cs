@@ -58,10 +58,17 @@ namespace HarDemoHost.Controllers
             }
         }
 
-        class SomeContent
-        {
-            public string Content { get; set; }
-            public IList<int> Collection { get; } = new List<int>();
-        }
+    }
+
+    /// <summary>
+    /// Some arbitrary structured data for serialisation
+    /// </summary>
+    /// <remarks>
+    /// The XML serialisation requires this to be a public, non-nested class.
+    /// </remarks>
+    public class SomeContent
+    {
+        public string Content { get; set; }
+        public IList<int> Collection { get; } = new List<int>();
     }
 }
