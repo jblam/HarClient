@@ -5,7 +5,6 @@
 export interface ITestCaseResults {
     [k: string]: Promise<any>;
 }
-document.cookie = "key=value;path=/api;expires=Thu, 01-Jan-1970 00:00:01 GMT";
 
 export const arr: ReadonlyArray<ITestCase> = [
     fetchTestCase("OK", { input: "/api/behaviour/content" }),
