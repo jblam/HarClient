@@ -25,7 +25,14 @@ namespace HarDemoHost
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers(options => options.RespectBrowserAcceptHeader = true).AddXmlSerializerFormatters().AddXmlDataContractSerializerFormatters();
+            // Custom option is necessary for the XML serialisation to participate in content
+            // negotiation, which is used by one of the HAR behaviour test cases.
+            services.AddControllers(options => options.RespectBrowserAcceptHeader = true)
+                // Additional XML serialisation must be explicitly added.
+                // JB 2020-06-28 unclear at this time what the difference between the formatters is.
+                // Perhaps one is redundant.
+                .AddXmlSerializerFormatters()
+                .AddXmlDataContractSerializerFormatters();
             services.AddRazorPages();
         }
 
