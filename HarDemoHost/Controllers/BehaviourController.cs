@@ -34,10 +34,13 @@ namespace HarDemoHost.Controllers
             return NoContent();
         }
 
+        static readonly CookieOptions DemoCookieOptions =
+            new CookieOptions { Path = "/api", SameSite = SameSiteMode.Strict };
+
         [HttpPost, Route("set-cookie")]
         public IActionResult SetCookie()
         {
-            Response.Cookies.Append("key", "value", new CookieOptions { Path = "/api", SameSite = SameSiteMode.Strict });
+            Response.Cookies.Append("key", "value", DemoCookieOptions);
             return NoContent();
         }
 
@@ -46,6 +49,7 @@ namespace HarDemoHost.Controllers
         {
             if (Request.Cookies.Any())
             {
+                Response.Cookies.Delete("key", DemoCookieOptions);
                 return Ok(Request.Cookies.Select(kv => $"{kv.Key}={kv.Value}"));
             }
             else
