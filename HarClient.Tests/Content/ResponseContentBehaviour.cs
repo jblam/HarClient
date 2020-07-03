@@ -35,20 +35,28 @@ namespace JBlam.HarClient.Tests.Content
             return sut.CreateHar();
         }
 
-        static void AssertIsMimeType(string expectedMediaType, Encoding expectedEncoding, string actualMimeType)
+        static void AssertIsMimeType(string expectedMediaType, Encoding? expectedEncoding, string actualMimeType)
         {
-            // Spec:
-            // > *mimeType [string]* - MIME type of the response text (value of the Content-Type
-            // > response header). The charset attribute of the MIME type is included (if
-            // > available).
-            //
-            // Since the mock HTTP handler will always produce a content-type value, the test
-            // should fail if the HAR doesn't represent content-type in the `mimeType` field.
-            var match = Regex.Match(actualMimeType, @"^(.*); charset=(.*)$");
-            Assert.IsTrue(match.Success, "MIME type {0} was not well-formed", actualMimeType);
-            var (actualMediaType, actualCharSet) = (match.Groups[1].Value, match.Groups[2].Value);
-            Assert.AreEqual(expectedMediaType, actualMediaType, "Media type did not match the expected value");
-            Assert.AreEqual(expectedEncoding.WebName, actualCharSet, "CharSet did not match the expected value");
+            if (expectedEncoding == null)
+            {
+                // The charset must be not emitted
+                Assert.AreEqual(expectedMediaType, actualMimeType, "Media type did not match the expected value");
+            }
+            else
+            {
+                // Spec:
+                // > *mimeType [string]* - MIME type of the response text (value of the Content-Type
+                // > response header). The charset attribute of the MIME type is included (if
+                // > available).
+                //
+                // Since the mock HTTP handler will always produce a content-type value, the test
+                // should fail if the HAR doesn't represent content-type in the `mimeType` field.
+                var match = Regex.Match(actualMimeType, @"^(.*); charset=(.*)$");
+                Assert.IsTrue(match.Success, "MIME type {0} was not well-formed", actualMimeType);
+                var (actualMediaType, actualCharSet) = (match.Groups[1].Value, match.Groups[2].Value);
+                Assert.AreEqual(expectedMediaType, actualMediaType, "Media type did not match the expected value");
+                Assert.AreEqual(expectedEncoding.WebName, actualCharSet, "CharSet did not match the expected value");
+            }
         }
 
         [TestMethod]
@@ -67,6 +75,7 @@ namespace JBlam.HarClient.Tests.Content
             var content = new StringContent(expectedHarContentValue);
             var har = await GetContent(content);
             var harContent = har.Log.Entries.First().Response.Content;
+            Assert.IsNotNull(harContent, "No content was recorded in the HAR");
             AssertIsMimeType(MediaTypeNames.Text.Plain, Encoding.UTF8, harContent.MimeType);
             Assert.AreEqual(expectedHarContentValue, harContent.Text);
             Assert.AreEqual(expectedHarContentValue.Length, harContent.Size);
@@ -80,6 +89,7 @@ namespace JBlam.HarClient.Tests.Content
             const string expectedJson = "{ \"content\": \"yes\" }";
             var content = new StringContent(expectedJson, Encoding.UTF8, expectedMediaType);
             var harContent = (await GetContent(content)).Log.Entries.First().Response.Content;
+            Assert.IsNotNull(harContent, "No content was recorded in the HAR");
             AssertIsMimeType(expectedMediaType, Encoding.UTF8, harContent.MimeType);
             Assert.AreEqual(expectedJson, harContent.Text);
             Assert.AreEqual(expectedJson.Length, harContent.Size);
@@ -96,6 +106,7 @@ namespace JBlam.HarClient.Tests.Content
             const string stringValue = "Unicode: 👍 很好";
             var content = new StringContent(stringValue);
             var harContent = (await GetContent(content)).Log.Entries.First().Response.Content;
+            Assert.IsNotNull(harContent, "No content was recorded in the HAR");
             AssertIsMimeType(MediaTypeNames.Text.Plain, Encoding.UTF8, harContent.MimeType);
             // The spec is weird when it comes to this point:
             // > *text [string, optional]* - Response body sent from the server or loaded from the
@@ -132,6 +143,41 @@ namespace JBlam.HarClient.Tests.Content
             // direct characters.
             Assert.AreEqual(stringValue, harContent.Text);
             Assert.AreEqual(Encoding.UTF8.GetByteCount(stringValue), harContent.Size);
+        }
+
+        [TestMethod]
+        public async Task LogsBinaryImage()
+        {
+            var imageBytes = new byte[]
+            {
+                // smallest possible GIF
+                0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0x01, 0x00, 0x01, 0x00,
+                0x00, 0xff, 0x00, 0x2c, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00,
+                0x01, 0x00, 0x00, 0x02, 0x00, 0x3b,
+            };
+            var harContent = (await GetContent(new ByteArrayContent(imageBytes))).Log.Entries.First().Response.Content;
+            Assert.IsNotNull(harContent, "No content was recorded in the HAR");
+            AssertIsMimeType(MediaTypeNames.Image.Gif, null, harContent.MimeType);
+            // Size should equal the *content* size, not the size of the *HAR's representation*
+            // of the content.
+            Assert.AreEqual(imageBytes.Length, harContent.Size, "Unexpected content size reported");
+            Assert.AreEqual("base64", harContent.Encoding, "Binary image data was unexpectedly not base64-encoded for the HAR");
+            Assert.AreEqual(Convert.ToBase64String(imageBytes), harContent.Text);
+        }
+
+        [TestMethod]
+        public async Task LogsSvgImageAsText()
+        {
+            const string svgText = @"<svg xmlns=""http://www.w3.org/2000/svg"" encoding=""utf-8""></svg>";
+            var httpContent = new StringContent(svgText, Encoding.UTF8, "image/svg+xml");
+            // charset appears to be legal according to https://tools.ietf.org/html/rfc7231#section-3.1.1.2
+            // but does not appear to be emitted in practice.
+            httpContent.Headers.ContentType.CharSet = null;
+            var harContent = (await GetContent(httpContent)).Log.Entries.First().Response.Content;
+            Assert.IsNotNull(harContent, "No content was recorded in the HAR");
+            Assert.IsNull(harContent.Encoding, "HAR unexpectedly re-encoded the SVG text");
+            AssertIsMimeType("image/svg+xml", null, harContent.MimeType);
+            Assert.AreEqual(svgText, harContent.Text);
         }
     }
 }
