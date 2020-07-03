@@ -32,6 +32,7 @@ export const arr: ReadonlyArray<ITestCase> = [
             }
         }
     ),
+    fetchTestCase("Get SVG", { input: "/hello.svg" }),
     {
         name: "GET binary content",
         run: async () => {
