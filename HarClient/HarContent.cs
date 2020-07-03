@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -55,14 +56,42 @@ namespace JBlam.HarClient
             }
             else
             {
-                return new Content
+                if (IsTextResponse(Headers.ContentType))
                 {
-                    MimeType = Headers.ContentType.MediaType,
-                    // TODO: smoke tests indicate that ContentEncoding is not set, and ContentType.CharSet is what we want
-                    Encoding = string.Join(",", Headers.ContentEncoding),
-                    Size = bytes.Length,
-                    Text = Convert.ToBase64String(bytes),
-                };
+                    return new Content
+                    {
+                        MimeType = Headers.ContentType.ToString(),
+                        Encoding = null,
+                        Size = bytes.Length,
+                        Text = Encoding.UTF8.GetString(bytes)
+                    };
+                }
+                else
+                {
+                    return new Content
+                    {
+                        MimeType = Headers.ContentType?.ToString(),
+                        Encoding = "base64",
+                        Size = bytes.Length,
+                        Text = Convert.ToBase64String(bytes),
+                    };
+                }
+
+                static bool IsTextResponse(MediaTypeHeaderValue? mediaType)
+                {
+                    if (mediaType is null)
+                        return false;
+                    if (mediaType.CharSet == Encoding.UTF8.WebName)
+                        return true;
+                    if (mediaType.MediaType.StartsWith("text/"))
+                        return true;
+                    if (mediaType.MediaType.StartsWith("application/") || mediaType.MediaType.StartsWith("image/"))
+                    {
+                        return mediaType.MediaType.EndsWith("json") ||
+                            mediaType.MediaType.EndsWith("xml");
+                    }
+                    return false;
+                }
             }
         }
 
