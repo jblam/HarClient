@@ -144,6 +144,27 @@ namespace JBlam.HarClient.Tests.Content
             Assert.AreEqual(stringValue, harContent.Text);
             Assert.AreEqual(Encoding.UTF8.GetByteCount(stringValue), harContent.Size);
         }
+        /// <summary>
+        /// Asserts that the HAR object representation contains characters which are illegal in
+        /// JSON. The serialiser is in charge of ensuring they are properly escaped.
+        /// </summary>
+        /// <returns>A Task which resolves when the test is complete</returns>
+        /// <remarks>
+        /// Escaping behaviour is asserted in
+        /// <seealso cref="HarSerialisationBehaviour.IllegalJsonCharactersAreEscaped"/>
+        /// </remarks>
+        [TestMethod]
+        public async Task ObjectRepresentationContainsIllegalJsonCharacters()
+        {
+            const string textNeedingEscapes = "String with newlines:\r\nand tabs:\t backspaces:\b null:\0 and other control chars:\u0003;\u0019;\u001f and quotes:\"";
+            var httpContent = new StringContent(textNeedingEscapes);
+            var harContent = (await GetContent(httpContent)).Log.Entries.First().Response.Content;
+            Assert.IsNotNull(harContent, "No content was recorded in the HAR");
+            AssertIsMimeType(MediaTypeNames.Text.Plain, Encoding.UTF8, harContent.MimeType);
+            // Size refers to the encoded length; all chars are 1-byte in UTF-8
+            Assert.AreEqual(textNeedingEscapes.Length, harContent.Size);
+            Assert.AreEqual(textNeedingEscapes, harContent.Text);
+        }
 
         [TestMethod]
         public async Task LogsBinaryImage()
