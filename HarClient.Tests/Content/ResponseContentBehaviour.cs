@@ -155,7 +155,9 @@ namespace JBlam.HarClient.Tests.Content
                 0x00, 0xff, 0x00, 0x2c, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00,
                 0x01, 0x00, 0x00, 0x02, 0x00, 0x3b,
             };
-            var harContent = (await GetContent(new ByteArrayContent(imageBytes))).Log.Entries.First().Response.Content;
+            var imageHttpContent = new ByteArrayContent(imageBytes);
+            imageHttpContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(MediaTypeNames.Image.Gif);
+            var harContent = (await GetContent(imageHttpContent)).Log.Entries.First().Response.Content;
             Assert.IsNotNull(harContent, "No content was recorded in the HAR");
             AssertIsMimeType(MediaTypeNames.Image.Gif, null, harContent.MimeType);
             // Size should equal the *content* size, not the size of the *HAR's representation*
@@ -163,6 +165,17 @@ namespace JBlam.HarClient.Tests.Content
             Assert.AreEqual(imageBytes.Length, harContent.Size, "Unexpected content size reported");
             Assert.AreEqual("base64", harContent.Encoding, "Binary image data was unexpectedly not base64-encoded for the HAR");
             Assert.AreEqual(Convert.ToBase64String(imageBytes), harContent.Text);
+        }
+
+        [TestMethod]
+        public async Task LogsForResponseMissingContentTypeHeader()
+        {
+            var bytes = new byte[] { (byte)'a', (byte)'b', (byte)'c', (byte)'d' };
+            var harContent = (await GetContent(new ByteArrayContent(bytes))).Log.Entries.First().Response.Content;
+            Assert.IsNotNull(harContent, "No content was recorded in the HAR");
+            Assert.AreEqual(bytes.Length, harContent.Size, "Unexpected content size reported");
+            Assert.AreEqual("base64", harContent.Encoding, "Unknown format data was unexpectedly not base64-encoded for the HAR");
+            Assert.AreEqual(Convert.ToBase64String(bytes), harContent.Text);
         }
 
         [TestMethod]
