@@ -27,13 +27,22 @@ namespace JBlam.HarClient
             var bytes = await bytesAsync.ConfigureAwait(false);
             if (bytes.Length > 0)
             {
-                // TODO: how to detect encoding properly?
-                // TODO: params?
-                return new PostData
+                if (Headers.ContentType?.MediaType == "application/x-www-form-urlencoded")
                 {
-                    MimeType = Headers.ContentType.MediaType,
-                    Text = Convert.ToBase64String(bytes)
-                };
+                    // TODO: params?
+                    throw new NotImplementedException();
+                }
+                else
+                {
+                    return new PostData
+                    {
+                        MimeType = Headers.ContentType?.MediaType,
+                        // Not every byte pattern is expressible in UTF-8. What we want is a "javascript-encoded UTF16"
+                        // output.
+                        // TODO: find test cases which expose the difference.
+                        Text = Encoding.UTF8.GetString(bytes)
+                    };
+                }
             }
             else
             {
@@ -76,23 +85,22 @@ namespace JBlam.HarClient
                         Text = Convert.ToBase64String(bytes),
                     };
                 }
-
-                static bool IsTextResponse(MediaTypeHeaderValue? mediaType)
-                {
-                    if (mediaType is null)
-                        return false;
-                    if (mediaType.CharSet == Encoding.UTF8.WebName)
-                        return true;
-                    if (mediaType.MediaType.StartsWith("text/"))
-                        return true;
-                    if (mediaType.MediaType.StartsWith("application/") || mediaType.MediaType.StartsWith("image/"))
-                    {
-                        return mediaType.MediaType.EndsWith("json") ||
-                            mediaType.MediaType.EndsWith("xml");
-                    }
-                    return false;
-                }
             }
+        }
+        static bool IsTextResponse(MediaTypeHeaderValue? mediaType)
+        {
+            if (mediaType is null)
+                return false;
+            if (mediaType.CharSet == Encoding.UTF8.WebName)
+                return true;
+            if (mediaType.MediaType.StartsWith("text/"))
+                return true;
+            if (mediaType.MediaType.StartsWith("application/") || mediaType.MediaType.StartsWith("image/"))
+            {
+                return mediaType.MediaType.EndsWith("json") ||
+                    mediaType.MediaType.EndsWith("xml");
+            }
+            return false;
         }
 
         protected override async Task SerializeToStreamAsync(Stream stream, TransportContext context)
