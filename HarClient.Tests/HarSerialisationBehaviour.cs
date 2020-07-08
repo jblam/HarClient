@@ -52,9 +52,25 @@ namespace JBlam.HarClient.Tests
                 }
             };
             var harRequest = multipartRequest.CreateHarRequest();
+            HarAssert.IsValidRequest(harRequest);
+        }
+
+
+        [TestMethod]
+        public void UrlEncodedContentRequestIsValid()
+        {
+            var urlEncodedRequest = new HttpRequestMessage(HttpMethod.Post, "http://example.net")
+            {
+                Content = new FormUrlEncodedContent(new[]
+                {
+                    KeyValuePair.Create("A", "B"),
+                    KeyValuePair.Create("C", "D")
+                })
+            };
+            var harRequest = urlEncodedRequest.CreateHarRequest();
             if (!harRequest.PostData.Params.Any())
             {
-                throw new TestException("Multipart content is expected to produce postData params");
+                throw new TestException("URL-encoded content is expected to produce postData params");
             }
             HarAssert.IsValidRequest(harRequest);
         }
