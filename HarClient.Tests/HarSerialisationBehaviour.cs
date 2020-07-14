@@ -70,6 +70,8 @@ namespace JBlam.HarClient.Tests
             var harRequest = urlEncodedRequest.CreateHarRequest();
             if (!harRequest.PostData.Params.Any())
             {
+                // TODO: this actually fails with NullReferenceException because the content-
+                // duplication is not implemented for Params.
                 throw new TestException("URL-encoded content is expected to produce postData params");
             }
             HarAssert.IsValidRequest(harRequest);

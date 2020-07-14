@@ -61,6 +61,7 @@ namespace JBlam.HarClient.Tests.Content
             // Could potentially use the UTF16 decoder on anything that's not obviously text, to
             // get a string that "smuggles out" arbitrary two-byte code points. This would cause
             // further issues with odd numbers of bytes, though.
+            // Otherwise, can we use a single-byte-width codepage that roundtrips naïvely?
         }
 
         [TestMethod]
@@ -71,6 +72,8 @@ namespace JBlam.HarClient.Tests.Content
                 KeyValuePair.Create("key", "value")
             };
             var har = await CreateSubmitLog(new FormUrlEncodedContent(content));
+            // TODO: the HarContent method throws, and that exception is swallowed.
+            // This is bad.
             var postData = har.Log.Entries.First().Request.PostData;
             Assert.AreEqual(content.Length, postData.Params.Count, "Params length was not equal to input");
             Assert.AreEqual(content[0].Key, postData.Params[0].Name);
