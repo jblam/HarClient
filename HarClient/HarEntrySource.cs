@@ -79,12 +79,31 @@ namespace JBlam.HarClient
 
         public async Task<Entry> CreateEntryAsync(CancellationToken cancellationToken)
         {
-            var request = cancellationToken.IsCancellationRequested
-                ? null
-                : await this.request;
-            var response = this.response == null || cancellationToken.IsCancellationRequested
-                ? null
-                : await this.response;
+            if (!cancellationToken.CanBeCanceled)
+                return CreateEntry(await request, response == null ? null : await response);
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return CreateEntry(ResultIfSuccessful(request), ResultIfSuccessful(response));
+            }
+            else
+            {
+                var cancellationMixinSource = new TaskCompletionSource<object>();
+                using var registration = cancellationToken.Register(() => cancellationMixinSource.TrySetCanceled());
+                var requestOrCancelled = await Task.WhenAny(cancellationMixinSource.Task, request);
+                var responseOrCancelled = response == null
+                    ? null
+                    : await Task.WhenAny(cancellationMixinSource.Task, response);
+                return CreateEntry(
+                    requestOrCancelled == request ? request.Result : null,
+                    responseOrCancelled == response ? response?.Result : null);
+            }
+            // JB 2020-07-15 type restriction used here because we can't the return type as
+            // possibly null without it. (see https://stackoverflow.com/q/54593923 )
+            static T? ResultIfSuccessful<T>(Task<T>? t) where T : class =>
+                t?.Status == TaskStatus.RanToCompletion ? t.Result : default;
+        }
+        Entry CreateEntry(Request? request, Response? response)
+        {
             return new Entry
             {
                 Cache = new Cache(),
