@@ -62,6 +62,7 @@ namespace JBlam.HarClient
             var response = new Response
             {
                 BodySize = harContent.HarBodySize,
+                // TODO: Github issue #21: implement cookies
                 HttpVersion = httpResponse.Version.ToString(),
                 RedirectUrl = httpResponse.Headers.Location,
                 Status = (int)httpResponse.StatusCode,
@@ -106,10 +107,13 @@ namespace JBlam.HarClient
         {
             return new Entry
             {
+                // TODO: Github issue #20: look in to whether we can actually implement this.
                 Cache = new Cache(),
+                // TODO: Github issue #21: implement cookies
                 Request = request,
                 Response = response,
                 StartedDateTime = startTime,
+                // TODO: Github issue #11: ensure this is spec-compliant and as complete as possible
                 Timings = new Timings
                 {
                     Send = sendTime?.TotalMilliseconds ?? -1,
