@@ -12,4 +12,6 @@
     </PackageReference>
   </ItemGroup>
 
+  <ProjectExtensions><VisualStudio><UserProperties wwwroot_4firefox_1har__JsonSchema="https://json.schemastore.org/webjobs-list" /></VisualStudio></ProjectExtensions>
+
 </Project>

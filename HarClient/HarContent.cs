@@ -14,13 +14,43 @@ namespace JBlam.HarClient
 {
     class HarContent : HttpContent
     {
-        public HarContent(HttpContent innerContent)
+        public static HarContent WrapContent(HttpRequestMessage requestMessage)
+        {
+            if (requestMessage.Content == null)
+                return new HarContent();
+            else
+            {
+                var harContent = new HarContent(requestMessage.Content);
+                requestMessage.Content = harContent;
+                return harContent;
+            }
+        }
+        public static HarContent WrapContent(HttpResponseMessage responseMessage)
+        {
+            if (responseMessage.Content == null)
+                return new HarContent();
+            else
+            {
+                var harContent = new HarContent(responseMessage.Content);
+                responseMessage.Content = harContent;
+                return harContent;
+            }
+        }
+
+        HarContent()
+        {
+            bytesAsync = Task.FromResult(Array.Empty<byte>());
+        }
+
+        HarContent(HttpContent innerContent)
         {
             bytesAsync = innerContent.ReadAsByteArrayAsync();
             Headers.AddRange(innerContent.Headers);
         }
 
         readonly Task<byte[]> bytesAsync;
+
+        internal int HarBodySize => (int)Math.Min(Headers.ContentLength ?? -1, int.MaxValue);
 
         internal async Task<PostData?> GetPostData()
         {

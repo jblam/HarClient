@@ -15,6 +15,7 @@ namespace JBlam.HarClient.Tests.Content
     [TestClass]
     public class ResponseContentBehaviour
     {
+        // TODO: consider making this test on HarContent; then we can share basic constructs between request and respones
         static async Task<Har> GetContent(HttpContent content)
         {
             const string requestPath = "/" + nameof(ResponseContentBehaviour) + "/" + nameof(GetContent);
@@ -32,7 +33,7 @@ namespace JBlam.HarClient.Tests.Content
             var sut = new HarMessageHandler(mockHandler);
             var client = new HttpClient(sut) { BaseAddress = MockServerHandler.BaseUri };
             (await client.GetAsync(requestPath)).EnsureSuccessStatusCode();
-            return sut.CreateHar();
+            return await sut.CreateHarAsync();
         }
 
         static void AssertIsMimeType(string expectedMediaType, Encoding? expectedEncoding, string actualMimeType)

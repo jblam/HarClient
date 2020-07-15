@@ -31,7 +31,7 @@ namespace JBlam.HarClient.Tests.Content
             var sut = new HarMessageHandler(mockHandler);
             var client = new HttpClient(sut) { BaseAddress = MockServerHandler.BaseUri };
             await client.PostAsync(requestPath, contentToSend);
-            return sut.CreateHar();
+            return await sut.CreateHarAsync();
         }
 
         [TestMethod]

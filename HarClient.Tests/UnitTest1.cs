@@ -23,7 +23,7 @@ namespace JBlam.HarClient.Tests
                 HttpMethod.Post,
                 new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("OK") });
             _ = await client.PostAsync("test", new StringContent("Hello"));
-            var har = sut.CreateHar();
+            var har = await sut.CreateHarAsync();
             var harString = JsonConvert.SerializeObject(har, HarMessageHandler.HarSerializerSettings);
             Assert.IsNotNull(har);
         }
