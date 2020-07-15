@@ -77,5 +77,23 @@ namespace JBlam.HarClient.Tests.Content
             Assert.AreEqual(content[0].Key, postData.Params[0].Name);
             Assert.AreEqual(content[0].Value, postData.Params[0].Value);
         }
+
+        [TestMethod]
+        public async Task LogsQueryStringParams()
+        {
+            var content = new[]
+            {
+                new QueryStringParameter{ Name = "key1", Value = "value1" },
+                new QueryStringParameter{ Name = "key2", Value = "value2" }
+            };
+            var builder = new UriBuilder("http://example.net")
+            {
+                Query = string.Join("&", content.Select(kv => $"{Uri.EscapeUriString(kv.Name)}={Uri.EscapeUriString(kv.Value)}"))
+            };
+            var entrySource = new HarEntrySource(new HttpRequestMessage(HttpMethod.Get, builder.Uri), default);
+            var request = (await entrySource.CreateEntryAsync(default)).Request;
+            Assert.IsNotNull(request.QueryString);
+            CollectionAssert.AreEqual(content, request.QueryString.ToList());
+        }
     }
 }
