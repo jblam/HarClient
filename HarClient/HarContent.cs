@@ -50,6 +50,8 @@ namespace JBlam.HarClient
 
         readonly Task<byte[]> bytesAsync;
 
+        // TODO: is -1 appropriate here?
+        // Consider reimplementing the HAR model in order to encapsulate the semantics better.
         internal int HarBodySize => (int)Math.Min(Headers.ContentLength ?? -1, int.MaxValue);
 
         internal async Task<PostData?> GetPostData()

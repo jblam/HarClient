@@ -15,7 +15,6 @@ namespace JBlam.HarClient.Tests.Content
     [TestClass]
     public class ResponseContentBehaviour
     {
-        // TODO: consider making this test on HarContent; then we can share basic constructs between request and respones
         static async Task<Har> GetContent(HttpContent content)
         {
             const string requestPath = "/" + nameof(ResponseContentBehaviour) + "/" + nameof(GetContent);

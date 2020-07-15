@@ -73,13 +73,9 @@ namespace JBlam.HarClient.Tests
             };
             var sut = new HarEntrySource(urlEncodedRequest, default);
             var entry = await sut.CreateEntryAsync(default);
-            Assert.IsNotNull(entry.Request.PostData);
-            if (!entry.Request.PostData.Params.Any())
-            {
-                // TODO: this actually fails with NullReferenceException because the content-
-                // duplication is not implemented for Params.
-                throw new TestException("URL-encoded content is expected to produce postData params");
-            }
+            Assert.IsNotNull(entry.Request.PostData, "Failed to produce any postData");
+            Assert.IsNotNull(entry.Request.PostData.Params, "URL-encoded content did not produce a params collection");
+            Assert.IsTrue(entry.Request.PostData.Params.Any(), "URL-encoded content did not produce any params");
             HarAssert.IsValidRequest(entry.Request);
         }
 

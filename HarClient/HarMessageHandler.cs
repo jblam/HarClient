@@ -59,18 +59,6 @@ namespace JBlam.HarClient
             return response;
         }
 
-        // JB 2020-06-19: Broad outline of workflow.
-        // 1. Construct the HarMessageHandler instance
-        // 2. Add that to the HttpClient. TODO: how does this interact with IHttpClientFactory?
-        // 3. Run all the requests you wish to run
-        // 4. Don't dispose the HttpClient, because apparently that's a footgun.
-        // 5. Get the HAR out of the HarMessageHandler
-        //
-        // This produces the requirements
-        // - need to store at least a mutable log of requests/responses
-        // - at any point in the message handler lifetime, we need to produce valid HAR, so
-        // - incomplete request/responses need to serialise correctly
-
         readonly List<HarEntrySource> entries = new List<HarEntrySource>();
 
         public Task<Har> CreateHarAsync() => CreateHarAsync(null, CancellationToken.None);
