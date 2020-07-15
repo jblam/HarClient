@@ -52,41 +52,19 @@ namespace JBlam.HarClient
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            var entry = new Entry
-            {
-                StartedDateTime = DateTime.Now,
-                Cache = new Cache(),
-                Request = request.CreateHarRequest(),
-                Timings = new Timings(),
-            };
-            entries.Add(entry);
+            var entrySource = new HarEntrySource(request, DateTime.Now);
+            entries.Add(entrySource);
             var response = await base.SendAsync(request, cancellationToken);
-
-            // at the point where we've a defined "response", we have at least retrieved the
-            // headers, so this is unfairly allocating time to "send" which should go in "receive".
-            entry.Timings.Send = stopwatch.ElapsedMilliseconds;
-            entry.Response = response.CreateHarResponse();
-            entry.Time = stopwatch.ElapsedMilliseconds;
+            entrySource.SetResponse(response);
             return response;
         }
 
-        // JB 2020-06-19: Broad outline of workflow.
-        // 1. Construct the HarMessageHandler instance
-        // 2. Add that to the HttpClient. TODO: how does this interact with IHttpClientFactory?
-        // 3. Run all the requests you wish to run
-        // 4. Don't dispose the HttpClient, because apparently that's a footgun.
-        // 5. Get the HAR out of the HarMessageHandler
-        //
-        // This produces the requirements
-        // - need to store at least a mutable log of requests/responses
-        // - at any point in the message handler lifetime, we need to produce valid HAR, so
-        // - incomplete request/responses need to serialise correctly
+        readonly List<HarEntrySource> entries = new List<HarEntrySource>();
 
-        readonly List<Entry> entries = new List<Entry>();
-
-        public Har CreateHar() => CreateHar(null);
-        public Har CreateHar(string? comment)
+        public Task<Har> CreateHarAsync() => CreateHarAsync(null, CancellationToken.None);
+        public Task<Har> CreateHarAsync(string? comment) => CreateHarAsync(comment, CancellationToken.None);
+        public Task<Har> CreateHarAsync(CancellationToken cancellationToken) => CreateHarAsync(null, cancellationToken);
+        public async Task<Har> CreateHarAsync(string? comment, CancellationToken cancellationToken)
         {
             var output = new Har
             {
@@ -98,7 +76,7 @@ namespace JBlam.HarClient
                     Version = "1.2",
                 }
             };
-            output.Log.Entries.AddRange(entries);
+            output.Log.Entries.AddRange(await Task.WhenAll(entries.Select(e => e.CreateEntryAsync(cancellationToken))));
             return output;
         }
 

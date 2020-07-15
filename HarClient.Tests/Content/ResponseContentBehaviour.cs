@@ -32,7 +32,7 @@ namespace JBlam.HarClient.Tests.Content
             var sut = new HarMessageHandler(mockHandler);
             var client = new HttpClient(sut) { BaseAddress = MockServerHandler.BaseUri };
             (await client.GetAsync(requestPath)).EnsureSuccessStatusCode();
-            return sut.CreateHar();
+            return await sut.CreateHarAsync();
         }
 
         static void AssertIsMimeType(string expectedMediaType, Encoding? expectedEncoding, string actualMimeType)

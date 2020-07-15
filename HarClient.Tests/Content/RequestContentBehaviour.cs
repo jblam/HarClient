@@ -31,7 +31,7 @@ namespace JBlam.HarClient.Tests.Content
             var sut = new HarMessageHandler(mockHandler);
             var client = new HttpClient(sut) { BaseAddress = MockServerHandler.BaseUri };
             await client.PostAsync(requestPath, contentToSend);
-            return sut.CreateHar();
+            return await sut.CreateHarAsync();
         }
 
         [TestMethod]
@@ -72,12 +72,28 @@ namespace JBlam.HarClient.Tests.Content
                 KeyValuePair.Create("key", "value")
             };
             var har = await CreateSubmitLog(new FormUrlEncodedContent(content));
-            // TODO: the HarContent method throws, and that exception is swallowed.
-            // This is bad.
             var postData = har.Log.Entries.First().Request.PostData;
             Assert.AreEqual(content.Length, postData.Params.Count, "Params length was not equal to input");
             Assert.AreEqual(content[0].Key, postData.Params[0].Name);
             Assert.AreEqual(content[0].Value, postData.Params[0].Value);
+        }
+
+        [TestMethod]
+        public async Task LogsQueryStringParams()
+        {
+            var content = new[]
+            {
+                new QueryStringParameter{ Name = "key1", Value = "value1" },
+                new QueryStringParameter{ Name = "key2", Value = "value2" }
+            };
+            var builder = new UriBuilder("http://example.net")
+            {
+                Query = string.Join("&", content.Select(kv => $"{Uri.EscapeUriString(kv.Name)}={Uri.EscapeUriString(kv.Value)}"))
+            };
+            var entrySource = new HarEntrySource(new HttpRequestMessage(HttpMethod.Get, builder.Uri), default);
+            var request = (await entrySource.CreateEntryAsync(default)).Request;
+            Assert.IsNotNull(request.QueryString);
+            CollectionAssert.AreEqual(content, request.QueryString.ToList());
         }
     }
 }
