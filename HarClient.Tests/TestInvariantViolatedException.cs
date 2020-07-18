@@ -10,12 +10,12 @@ namespace JBlam.HarClient.Tests
     /// caught or expected in meta-tests.
     /// </remarks>
     [Serializable]
-    public class TestException : Exception
+    public class TestInvariantViolatedException : Exception
     {
-        public TestException() { }
-        public TestException(string message) : base(message) { }
-        public TestException(string message, Exception inner) : base(message, inner) { }
-        protected TestException(
+        public TestInvariantViolatedException() { }
+        public TestInvariantViolatedException(string message) : base(message) { }
+        public TestInvariantViolatedException(string message, Exception inner) : base(message, inner) { }
+        protected TestInvariantViolatedException(
           System.Runtime.Serialization.SerializationInfo info,
           System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }

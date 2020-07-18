@@ -22,7 +22,7 @@ namespace JBlam.HarClient.Tests.Content
             var cancellationTokenSource = new CancellationTokenSource();
             var entryTask = sut.CreateEntryAsync(cancellationTokenSource.Token);
             if (entryTask.IsCompleted)
-                throw new TestException("Creation of entry unexpectedly resolved before content was copied");
+                throw new TestInvariantViolatedException("Creation of entry unexpectedly resolved before content was copied");
             cancellationTokenSource.Cancel();
             Assert.IsTrue(entryTask.IsCompletedSuccessfully, "Entry task failed to complete after cancelling unresolvable content duplication");
             var entry = entryTask.Result;
@@ -65,7 +65,7 @@ namespace JBlam.HarClient.Tests.Content
             sut.SetResponse(deferredResponse);
             var entryTask = sut.CreateEntryAsync(default);
             if (entryTask.IsCompleted)
-                throw new TestException("Entry task unexpectedly completed before content is available");
+                throw new TestInvariantViolatedException("Entry task unexpectedly completed before content is available");
             deferredResponseContent.Resolve(new MemoryStream(Encoding.UTF8.GetBytes("Hello")));
             Assert.AreEqual(TaskStatus.RanToCompletion, entryTask.Status, "SUT failed to produce an entry when the content copy was completed");
         }

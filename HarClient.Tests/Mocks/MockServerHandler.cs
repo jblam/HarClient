@@ -44,7 +44,7 @@ namespace JBlam.HarClient.Tests.Mocks
             var method = request.Method;
             if (Responses.TryGetValue((path, method), out var response))
                 return response;
-            throw new TestException($"No response defined for [{method} {path}]");
+            throw new TestInvariantViolatedException($"No response defined for [{method} {path}]");
         }
     }
 }
