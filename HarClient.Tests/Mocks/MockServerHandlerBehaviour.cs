@@ -64,7 +64,7 @@ namespace JBlam.HarClient.Tests.Mocks
         [TestMethod]
         public async Task ThrowsIfUnexpectedRequest()
         {
-            var thrownException = await Assert.ThrowsExceptionAsync<TestException>(() => client.GetAsync("http://garbage.url/"));
+            var thrownException = await Assert.ThrowsExceptionAsync<TestInvariantViolatedException>(() => client.GetAsync("http://garbage.url/"));
             Assert.AreEqual("No response defined for [GET http://garbage.url/]", thrownException.Message);
         }
         [TestMethod]

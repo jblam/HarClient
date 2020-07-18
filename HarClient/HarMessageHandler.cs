@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -17,6 +18,8 @@ namespace JBlam.HarClient
     public class HarMessageHandler : DelegatingHandler
     {
         public HarMessageHandler()
+#pragma warning disable CA2000 // Dispose objects before losing scope
+                               // Justification: ctor parameter is owned and disposed by the base class.
             // JB 2020-06-11: per MS docs,
             // > Starting with .NET Core 2.1, the SocketsHttpHandler class provides the
             // > implementation used by higher-level HTTP networking classes such as HttpClient.
@@ -26,6 +29,7 @@ namespace JBlam.HarClient
 #else
             : base(new HttpClientHandler())
 #endif
+#pragma warning restore CA2000 // Dispose objects before losing scope
         { }
 
         public HarMessageHandler(HttpMessageHandler innerHandler) : base(innerHandler)
@@ -52,41 +56,22 @@ namespace JBlam.HarClient
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            var entry = new Entry
-            {
-                StartedDateTime = DateTime.Now,
-                Cache = new Cache(),
-                Request = request.CreateHarRequest(),
-                Timings = new Timings(),
-            };
-            entries.Add(entry);
-            var response = await base.SendAsync(request, cancellationToken);
-
-            // at the point where we've a defined "response", we have at least retrieved the
-            // headers, so this is unfairly allocating time to "send" which should go in "receive".
-            entry.Timings.Send = stopwatch.ElapsedMilliseconds;
-            entry.Response = response.CreateHarResponse();
-            entry.Time = stopwatch.ElapsedMilliseconds;
+            var entrySource = new HarEntrySource(request, DateTime.Now);
+            entries.Add(entrySource);
+            var response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            entrySource.SetResponse(response);
             return response;
         }
 
-        // JB 2020-06-19: Broad outline of workflow.
-        // 1. Construct the HarMessageHandler instance
-        // 2. Add that to the HttpClient. TODO: how does this interact with IHttpClientFactory?
-        // 3. Run all the requests you wish to run
-        // 4. Don't dispose the HttpClient, because apparently that's a footgun.
-        // 5. Get the HAR out of the HarMessageHandler
-        //
-        // This produces the requirements
-        // - need to store at least a mutable log of requests/responses
-        // - at any point in the message handler lifetime, we need to produce valid HAR, so
-        // - incomplete request/responses need to serialise correctly
+        // https://docs.microsoft.com/en-us/dotnet/api/system.net.http.httpmessagehandler?view=netcore-3.1
+        // > If developers derive classes from HttpMessageHandler and override the SendAsync method,
+        // > they must make sure that SendAsync can get called concurrently by different threads.
+        readonly ConcurrentBag<HarEntrySource> entries = new ConcurrentBag<HarEntrySource>();
 
-        readonly List<Entry> entries = new List<Entry>();
-
-        public Har CreateHar() => CreateHar(null);
-        public Har CreateHar(string? comment)
+        public Task<Har> CreateHarAsync() => CreateHarAsync(null, CancellationToken.None);
+        public Task<Har> CreateHarAsync(string? comment) => CreateHarAsync(comment, CancellationToken.None);
+        public Task<Har> CreateHarAsync(CancellationToken cancellationToken) => CreateHarAsync(null, cancellationToken);
+        public async Task<Har> CreateHarAsync(string? comment, CancellationToken cancellationToken)
         {
             var output = new Har
             {
@@ -98,7 +83,8 @@ namespace JBlam.HarClient
                     Version = "1.2",
                 }
             };
-            output.Log.Entries.AddRange(entries);
+            var harEntries = await Task.WhenAll(entries.Select(e => e.CreateEntryAsync(cancellationToken))).ConfigureAwait(false);
+            output.Log.Entries.AddRange(harEntries.OrderBy(e => e.StartedDateTime));
             return output;
         }
 
