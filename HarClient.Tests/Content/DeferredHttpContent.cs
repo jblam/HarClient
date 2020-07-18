@@ -13,6 +13,7 @@ namespace JBlam.HarClient.Tests.Content
         readonly TaskCompletionSource<Stream> tcs = new TaskCompletionSource<Stream>();
 
         public void Resolve(Stream stream) => tcs.SetResult(stream);
+        public void Explode(Exception exception) => tcs.SetException(exception);
 
         protected override async Task SerializeToStreamAsync(Stream stream, TransportContext context)
         {

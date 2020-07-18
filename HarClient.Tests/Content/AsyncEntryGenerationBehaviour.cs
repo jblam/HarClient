@@ -69,5 +69,20 @@ namespace JBlam.HarClient.Tests.Content
             deferredResponseContent.Resolve(new MemoryStream(Encoding.UTF8.GetBytes("Hello")));
             Assert.AreEqual(TaskStatus.RanToCompletion, entryTask.Status, "SUT failed to produce an entry when the content copy was completed");
         }
+
+        [TestMethod]
+        public async Task ExceptionThrownDuringTranscriptionCanBeCaught()
+        {
+            var arbitraryRequest = new HttpRequestMessage(HttpMethod.Get, "http://example.net");
+            var deferredResponseContent = new DeferredHttpContent();
+            var deferredResponse = new HttpResponseMessage { Content = deferredResponseContent };
+            var sut = new HarEntrySource(arbitraryRequest, default);
+            sut.SetResponse(deferredResponse);
+            var entryTask = sut.CreateEntryAsync(default);
+            if (entryTask.IsCompleted)
+                throw new TestInvariantViolatedException("Entry task unexpectedly completed before content is available");
+            deferredResponseContent.Explode(new TestExpectedException("Out of peanuts"));
+            await Assert.ThrowsExceptionAsync<TestExpectedException>(() => entryTask);
+        }
     }
 }
