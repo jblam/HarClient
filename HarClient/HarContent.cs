@@ -59,7 +59,11 @@ namespace JBlam.HarClient
         internal async Task<PostData?> GetPostData()
         {
             var bytes = await bytesAsync.ConfigureAwait(false);
-            if (bytes.Length > 0)
+            if (bytes.Length == 0)
+            {
+                return null;
+            }
+            else if (IsTextResponse(Headers.ContentType))
             {
                 var output = new PostData
                 {
@@ -78,9 +82,16 @@ namespace JBlam.HarClient
             }
             else
             {
-                // Zero-length content is used because .NET separates the "content headers" from
-                // the other headers. From HAR's perspective, there is no post data.
-                return null;
+                return new PostData
+                {
+                    MimeType = Headers.ContentType?.MediaType,
+                    // Binary content is problematic in HAR 1.2 because there's no "meta encoding"
+                    // on the postData object as there is for (response) content.
+                    // For binary content, allow JSON.NET to escape the byte value where necessary.
+                    // We hope that the interpreting implementation will naively translate the code
+                    // point values back in to binary content.
+                    Text = new string(bytes.Select(b => (char)b).ToArray())
+                };
             }
         }
         internal async Task<Content> GetContent()
@@ -95,28 +106,25 @@ namespace JBlam.HarClient
                     Text = ""
                 };
             }
+            else if (IsTextResponse(Headers.ContentType))
+            {
+                return new Content
+                {
+                    MimeType = Headers.ContentType.ToString(),
+                    Encoding = null,
+                    Size = bytes.Length,
+                    Text = Encoding.UTF8.GetString(bytes)
+                };
+            }
             else
             {
-                if (IsTextResponse(Headers.ContentType))
+                return new Content
                 {
-                    return new Content
-                    {
-                        MimeType = Headers.ContentType.ToString(),
-                        Encoding = null,
-                        Size = bytes.Length,
-                        Text = Encoding.UTF8.GetString(bytes)
-                    };
-                }
-                else
-                {
-                    return new Content
-                    {
-                        MimeType = Headers.ContentType?.ToString(),
-                        Encoding = "base64",
-                        Size = bytes.Length,
-                        Text = Convert.ToBase64String(bytes),
-                    };
-                }
+                    MimeType = Headers.ContentType?.ToString(),
+                    Encoding = "base64",
+                    Size = bytes.Length,
+                    Text = Convert.ToBase64String(bytes),
+                };
             }
         }
         static bool IsTextResponse(MediaTypeHeaderValue? mediaType)
@@ -130,7 +138,8 @@ namespace JBlam.HarClient
             if (mediaType.MediaType.StartsWith("application/") || mediaType.MediaType.StartsWith("image/"))
             {
                 return mediaType.MediaType.EndsWith("json") ||
-                    mediaType.MediaType.EndsWith("xml");
+                    mediaType.MediaType.EndsWith("xml") ||
+                    mediaType.MediaType.EndsWith("x-www-form-urlencoded");
             }
             return false;
         }

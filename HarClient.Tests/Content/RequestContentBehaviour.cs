@@ -46,22 +46,13 @@ namespace JBlam.HarClient.Tests.Content
             Assert.AreEqual(0, postData.Params.Count, "Unexpected params content in request post-data");
         }
 
-        [TestMethod, Ignore]
+        [TestMethod]
         public async Task LogsInvalidUtf8()
         {
             var invalidUtf8 = new byte[] { 0b1100_0000, (byte)'a' };
             var har = await CreateSubmitLog(new ByteArrayContent(invalidUtf8, 0, 2));
             var postData = har.Log.Entries.First().Request.PostData;
             Assert.AreEqual("\u00c0a", postData.Text);
-
-            // actually returns the replacement char \ufffd
-            // The 1.3 spec by Ahmad Nassri resolves this by including an Encoding parameter inside
-            // postData. For this specific case we might be able to fashion a UCS-2 code point
-            // which works.
-            // Could potentially use the UTF16 decoder on anything that's not obviously text, to
-            // get a string that "smuggles out" arbitrary two-byte code points. This would cause
-            // further issues with odd numbers of bytes, though.
-            // Otherwise, can we use a single-byte-width codepage that roundtrips naïvely?
         }
 
         [TestMethod]
