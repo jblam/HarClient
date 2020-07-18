@@ -35,12 +35,13 @@ namespace JBlam.HarClient.Tests.Content
         [TestMethod]
         public void CanCancelSerialisationBeforeResponse()
         {
+            // This sets up an empty HarContent; the "content duplication" task should
+            // synchronously produce an empty byte array.
             var unresolvableRequest = new HttpRequestMessage(HttpMethod.Get, "http://example.net");
             var sut = new HarEntrySource(unresolvableRequest, default);
-            var cancellationTokenSource = new CancellationTokenSource();
-            var entryTask = sut.CreateEntryAsync(cancellationTokenSource.Token);
-            cancellationTokenSource.Cancel();
-            Assert.IsTrue(entryTask.IsCompletedSuccessfully, "Entry task failed to complete after cancelling unresolvable content duplication");
+            // Entry creation should complete synchronously even though cancellation is requested
+            var entryTask = sut.CreateEntryAsync(new CancellationToken(true));
+            Assert.IsTrue(entryTask.IsCompletedSuccessfully, "Entry creation failed to complete");
             var entry = entryTask.Result;
             Assert.IsNotNull(entry.Request, "Cancelled HAR entry generation did not record the synchronously-available request");
         }

@@ -64,7 +64,7 @@ namespace JBlam.HarClient.Tests
         [TestMethod]
         public async Task QueryStringRequestIsValid()
         {
-            var queryStringRequest = new HttpRequestMessage(HttpMethod.Post, "http://example.net?key=value");
+            var queryStringRequest = new HttpRequestMessage(HttpMethod.Post, "http://example.net?key=value&utf-8=✔");
             var sut = new HarEntrySource(queryStringRequest, default);
             var entry = await sut.CreateEntryAsync(default);
             Assert.IsTrue(entry.Request.QueryString.Count > 0, "Did not create any query string params");
@@ -78,8 +78,8 @@ namespace JBlam.HarClient.Tests
             {
                 Content = new FormUrlEncodedContent(new[]
                 {
-                    KeyValuePair.Create("A", "B"),
-                    KeyValuePair.Create("C", "D")
+                    KeyValuePair.Create("A→", "B"),
+                    KeyValuePair.Create("C", "D✔")
                 })
             };
             var sut = new HarEntrySource(urlEncodedRequest, default);

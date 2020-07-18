@@ -60,7 +60,7 @@ namespace JBlam.HarClient.Tests.Content
         {
             var content = new[]
             {
-                KeyValuePair.Create("key", "value")
+                KeyValuePair.Create("key", "value 👍")
             };
             var har = await CreateSubmitLog(new FormUrlEncodedContent(content));
             var postData = har.Log.Entries.First().Request.PostData;
@@ -88,7 +88,8 @@ namespace JBlam.HarClient.Tests.Content
             var content = new[]
             {
                 new QueryStringParameter{ Name = "key1", Value = "value1" },
-                new QueryStringParameter{ Name = "key2", Value = "value2" }
+                new QueryStringParameter{ Name = "key2", Value = "value2" },
+                new QueryStringParameter{ Name = "utf-8", Value = "✔" },
             };
             var builder = new UriBuilder("http://example.net")
             {
@@ -96,7 +97,6 @@ namespace JBlam.HarClient.Tests.Content
             };
             var entrySource = new HarEntrySource(new HttpRequestMessage(HttpMethod.Get, builder.Uri), default);
             var request = (await entrySource.CreateEntryAsync(default)).Request;
-            Assert.IsNotNull(request.QueryString);
             CollectionAssert.AreEqual(content, request.QueryString.ToList(), Comparer<QueryStringParameter>.Create((q1, q2) =>
             {
                 return DefaultToNull(string.Compare(q1.Name, q2.Name)) ??
