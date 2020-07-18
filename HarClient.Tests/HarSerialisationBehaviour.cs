@@ -50,6 +50,8 @@ namespace JBlam.HarClient.Tests
             {
                 Content = new MultipartFormDataContent
                 {
+                    // TODO: Github issue #22: multipart is treated as binary, so anything that's
+                    // not a single-byte UTF8 value will be wrong in UTF16.
                     { new StringContent("A"), "A", "file" },
                     { new StringContent("B"), "B" }
                 }
