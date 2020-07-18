@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace JBlam.HarClient
 {
@@ -47,6 +48,9 @@ namespace JBlam.HarClient
                 Method = httpRequest.Method.Method,
                 Url = httpRequest.RequestUri,
             };
+            request.QueryString.AddRange(
+                HttpUtility.ParseQueryString(httpRequest.RequestUri.Query)
+                    .Select(t => new QueryStringParameter { Name = t.key, Value = t.value }));
             request.Headers.AddRange(httpRequest.Headers.Select(AsHeader));
             return AppendContentAsync(harContent, request);
 

@@ -93,7 +93,13 @@ namespace JBlam.HarClient.Tests.Content
             var entrySource = new HarEntrySource(new HttpRequestMessage(HttpMethod.Get, builder.Uri), default);
             var request = (await entrySource.CreateEntryAsync(default)).Request;
             Assert.IsNotNull(request.QueryString);
-            CollectionAssert.AreEqual(content, request.QueryString.ToList());
+            CollectionAssert.AreEqual(content, request.QueryString.ToList(), Comparer<QueryStringParameter>.Create((q1, q2) =>
+            {
+                return DefaultToNull(string.Compare(q1.Name, q2.Name)) ??
+                    DefaultToNull(string.Compare(q1.Value, q2.Value)) ??
+                        DefaultToNull(string.Compare(q1.Comment, q2.Comment)) ?? 0;
+                static int? DefaultToNull(int i) => i == default ? new int?() : i;
+            }));
         }
     }
 }

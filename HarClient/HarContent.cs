@@ -9,6 +9,8 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
+using System.Xml;
 
 namespace JBlam.HarClient
 {
@@ -59,22 +61,20 @@ namespace JBlam.HarClient
             var bytes = await bytesAsync.ConfigureAwait(false);
             if (bytes.Length > 0)
             {
-                if (Headers.ContentType?.MediaType == "application/x-www-form-urlencoded")
+                var output = new PostData
                 {
-                    // TODO: params?
-                    throw new NotImplementedException();
-                }
-                else
+                    MimeType = Headers.ContentType?.MediaType,
+                    // Not every byte pattern is expressible in UTF-8. What we want is a "javascript-encoded UTF16"
+                    // output.
+                    // TODO: find test cases which expose the difference.
+                    Text = Encoding.UTF8.GetString(bytes)
+                };
+                if (output.MimeType == "application/x-www-form-urlencoded")
                 {
-                    return new PostData
-                    {
-                        MimeType = Headers.ContentType?.MediaType,
-                        // Not every byte pattern is expressible in UTF-8. What we want is a "javascript-encoded UTF16"
-                        // output.
-                        // TODO: find test cases which expose the difference.
-                        Text = Encoding.UTF8.GetString(bytes)
-                    };
+                    var queryParams = HttpUtility.ParseQueryString(output.Text);
+                    output.Params.AddRange(queryParams.Select(t => new PostDataParameter { Name = t.key, Value = t.value }));
                 }
+                return output;
             }
             else
             {
@@ -143,7 +143,9 @@ namespace JBlam.HarClient
 
         protected override bool TryComputeLength(out long length)
         {
-            // TODO: research expected semantics
+            // paraphrasing https://docs.microsoft.com/en-us/dotnet/api/system.net.http.httpcontent.trycomputelength?view=netcore-3.1
+            // return false if the length cannot be easily computed, and the system will buffer the
+            // content for you.
             if (bytesAsync.Status == TaskStatus.RanToCompletion)
             {
                 length = bytesAsync.Result.Length;
