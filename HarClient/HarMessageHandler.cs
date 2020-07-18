@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -62,7 +63,10 @@ namespace JBlam.HarClient
             return response;
         }
 
-        readonly List<HarEntrySource> entries = new List<HarEntrySource>();
+        // https://docs.microsoft.com/en-us/dotnet/api/system.net.http.httpmessagehandler?view=netcore-3.1
+        // > If developers derive classes from HttpMessageHandler and override the SendAsync method,
+        // > they must make sure that SendAsync can get called concurrently by different threads.
+        readonly ConcurrentBag<HarEntrySource> entries = new ConcurrentBag<HarEntrySource>();
 
         public Task<Har> CreateHarAsync() => CreateHarAsync(null, CancellationToken.None);
         public Task<Har> CreateHarAsync(string? comment) => CreateHarAsync(comment, CancellationToken.None);
@@ -79,7 +83,8 @@ namespace JBlam.HarClient
                     Version = "1.2",
                 }
             };
-            output.Log.Entries.AddRange(await Task.WhenAll(entries.Select(e => e.CreateEntryAsync(cancellationToken))).ConfigureAwait(false));
+            var harEntries = await Task.WhenAll(entries.Select(e => e.CreateEntryAsync(cancellationToken))).ConfigureAwait(false);
+            output.Log.Entries.AddRange(harEntries.OrderBy(e => e.StartedDateTime));
             return output;
         }
 
