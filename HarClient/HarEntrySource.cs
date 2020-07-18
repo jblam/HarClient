@@ -56,7 +56,7 @@ namespace JBlam.HarClient
 
             static async Task<Request> AppendContentAsync(HarContent content, Request partialRequest)
             {
-                partialRequest.PostData = await content.GetPostData();
+                partialRequest.PostData = await content.GetPostData().ConfigureAwait(false);
                 return partialRequest;
             }
         }
@@ -77,7 +77,7 @@ namespace JBlam.HarClient
             
             static async Task<Response> AppendContentAsync(HarContent content, Response partialResponse)
             {
-                partialResponse.Content = await content.GetContent();
+                partialResponse.Content = await content.GetContent().ConfigureAwait(false);
                 return partialResponse;
             }
         }
@@ -85,7 +85,7 @@ namespace JBlam.HarClient
         public async Task<Entry> CreateEntryAsync(CancellationToken cancellationToken)
         {
             if (!cancellationToken.CanBeCanceled)
-                return CreateEntry(await request, response == null ? null : await response);
+                return CreateEntry(await request.ConfigureAwait(false), response == null ? null : await response.ConfigureAwait(false));
             if (cancellationToken.IsCancellationRequested)
             {
                 return CreateEntry(ResultIfSuccessful(request), ResultIfSuccessful(response));
@@ -94,10 +94,10 @@ namespace JBlam.HarClient
             {
                 var cancellationMixinSource = new TaskCompletionSource<object>();
                 using var registration = cancellationToken.Register(() => cancellationMixinSource.TrySetCanceled());
-                var requestOrCancelled = await Task.WhenAny(cancellationMixinSource.Task, request);
+                var requestOrCancelled = await Task.WhenAny(cancellationMixinSource.Task, request).ConfigureAwait(false);
                 var responseOrCancelled = response == null
                     ? null
-                    : await Task.WhenAny(cancellationMixinSource.Task, response);
+                    : await Task.WhenAny(cancellationMixinSource.Task, response).ConfigureAwait(false);
                 return CreateEntry(
                     requestOrCancelled == request ? request.Result : null,
                     responseOrCancelled == response ? response?.Result : null);

@@ -133,13 +133,13 @@ namespace JBlam.HarClient
                 return false;
             if (mediaType.CharSet == Encoding.UTF8.WebName)
                 return true;
-            if (mediaType.MediaType.StartsWith("text/"))
+            if (mediaType.MediaType.StartsWith("text/", StringComparison.InvariantCulture))
                 return true;
-            if (mediaType.MediaType.StartsWith("application/") || mediaType.MediaType.StartsWith("image/"))
+            if (mediaType.MediaType.StartsWith("application/", StringComparison.InvariantCulture) || mediaType.MediaType.StartsWith("image/", StringComparison.InvariantCulture))
             {
-                return mediaType.MediaType.EndsWith("json") ||
-                    mediaType.MediaType.EndsWith("xml") ||
-                    mediaType.MediaType.EndsWith("x-www-form-urlencoded");
+                return mediaType.MediaType.EndsWith("json", StringComparison.InvariantCulture) ||
+                    mediaType.MediaType.EndsWith("xml", StringComparison.InvariantCulture) ||
+                    mediaType.MediaType.EndsWith("x-www-form-urlencoded", StringComparison.InvariantCulture);
             }
             return false;
         }

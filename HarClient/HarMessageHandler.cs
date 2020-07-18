@@ -17,6 +17,8 @@ namespace JBlam.HarClient
     public class HarMessageHandler : DelegatingHandler
     {
         public HarMessageHandler()
+#pragma warning disable CA2000 // Dispose objects before losing scope
+                               // Justification: ctor parameter is owned and disposed by the base class.
             // JB 2020-06-11: per MS docs,
             // > Starting with .NET Core 2.1, the SocketsHttpHandler class provides the
             // > implementation used by higher-level HTTP networking classes such as HttpClient.
@@ -26,6 +28,7 @@ namespace JBlam.HarClient
 #else
             : base(new HttpClientHandler())
 #endif
+#pragma warning restore CA2000 // Dispose objects before losing scope
         { }
 
         public HarMessageHandler(HttpMessageHandler innerHandler) : base(innerHandler)
@@ -54,7 +57,7 @@ namespace JBlam.HarClient
         {
             var entrySource = new HarEntrySource(request, DateTime.Now);
             entries.Add(entrySource);
-            var response = await base.SendAsync(request, cancellationToken);
+            var response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
             entrySource.SetResponse(response);
             return response;
         }
@@ -76,7 +79,7 @@ namespace JBlam.HarClient
                     Version = "1.2",
                 }
             };
-            output.Log.Entries.AddRange(await Task.WhenAll(entries.Select(e => e.CreateEntryAsync(cancellationToken))));
+            output.Log.Entries.AddRange(await Task.WhenAll(entries.Select(e => e.CreateEntryAsync(cancellationToken))).ConfigureAwait(false));
             return output;
         }
 
