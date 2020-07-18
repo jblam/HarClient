@@ -52,8 +52,9 @@ namespace JBlam.HarClient
 
         readonly Task<byte[]> bytesAsync;
 
-        // TODO: is -1 appropriate here?
-        // Consider reimplementing the HAR model in order to encapsulate the semantics better.
+        // TODO: per Github issue #8, this should be the bytes transferred (with compression)
+        // TODO: per Github issue #24 consider reimplementing the HAR model in order to encapsulate the `-1`
+        //       with something more sematically-meaningful
         internal int HarBodySize => (int)Math.Min(Headers.ContentLength ?? -1, int.MaxValue);
 
         internal async Task<PostData?> GetPostData()
@@ -68,9 +69,6 @@ namespace JBlam.HarClient
                 var output = new PostData
                 {
                     MimeType = Headers.ContentType?.MediaType,
-                    // Not every byte pattern is expressible in UTF-8. What we want is a "javascript-encoded UTF16"
-                    // output.
-                    // TODO: find test cases which expose the difference.
                     Text = Encoding.UTF8.GetString(bytes)
                 };
                 if (output.MimeType == "application/x-www-form-urlencoded")

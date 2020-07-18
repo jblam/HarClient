@@ -19,7 +19,8 @@ namespace JBlam.HarClient.Tests.Content
             var content = Tuple.Create(AllByteValues);
             var encoded = JsonConvert.SerializeObject(content, HarMessageHandler.HarSerializerSettings);
             var decoded = JsonConvert.DeserializeObject<Tuple<string>>(encoded);
-            // the NEXT LINE (NEL) character has been problematic in other approaches.
+            // Ensure that we are actually encoding stuff. The NEXT LINE (NEL) character is chosen
+            // somewhat arbitrarily as some software will "fix" it to be some combination of \r\n.
             StringAssert.Contains(encoded, "\\u0085");
             Assert.AreEqual(AllByteValues, decoded.Item1);
         }
