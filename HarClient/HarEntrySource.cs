@@ -52,6 +52,7 @@ namespace JBlam.HarClient
                 HttpUtility.ParseQueryString(httpRequest.RequestUri.Query)
                     .Select(t => new QueryStringParameter { Name = t.key, Value = t.value }));
             request.Headers.AddRange(httpRequest.Headers.Select(AsHeader));
+            request.Headers.AddRange(harContent.Headers.Select(AsHeader));
             return AppendContentAsync(harContent, request);
 
             static async Task<Request> AppendContentAsync(HarContent content, Request partialRequest)
@@ -73,6 +74,7 @@ namespace JBlam.HarClient
                 StatusText = httpResponse.ReasonPhrase,
             };
             response.Headers.AddRange(httpResponse.Headers.Select(AsHeader));
+            response.Headers.AddRange(harContent.Headers.Select(AsHeader));
             return AppendContentAsync(harContent, response);
             
             static async Task<Response> AppendContentAsync(HarContent content, Response partialResponse)

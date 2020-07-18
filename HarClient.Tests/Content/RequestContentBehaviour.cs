@@ -105,5 +105,14 @@ namespace JBlam.HarClient.Tests.Content
                 static int? DefaultToNull(int i) => i == default ? new int?() : i;
             }));
         }
+
+        [TestMethod]
+        public async Task RequestHarIncludesContentHeaders()
+        {
+            var har = await CreateSubmitLog(new StringContent("Hello I am string"));
+            var harRequest = har.Log.Entries.First().Request;
+            Assert.IsTrue(harRequest.Headers.Any(h => h.Name.Equals("content-type", StringComparison.InvariantCultureIgnoreCase)),
+                "HAR did not include content headers from the request");
+        }
     }
 }

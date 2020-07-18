@@ -213,5 +213,13 @@ namespace JBlam.HarClient.Tests.Content
             AssertIsMimeType("image/svg+xml", null, harContent.MimeType);
             Assert.AreEqual(svgText, harContent.Text);
         }
+
+        [TestMethod]
+        public async Task ResponseHarIncludesContentHeaders()
+        {
+            var har = await GetContent(new StringContent("Hello this is dog"));
+            var harResponse = har.Log.Entries.First().Response;
+            Assert.IsTrue(harResponse.Headers.Any(h => h.Name.Equals("content-type", StringComparison.InvariantCultureIgnoreCase)));
+        }
     }
 }
