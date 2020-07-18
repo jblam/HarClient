@@ -79,6 +79,19 @@ namespace JBlam.HarClient.Tests.Content
         }
 
         [TestMethod]
+        public async Task HandlesLyingUrlEncodedMimeType()
+        {
+            var har = await CreateSubmitLog(new StringContent("I am not really URL-encoded params", Encoding.UTF8, "application/x-www-form-urlencoded"));
+            var postData = har.Log.Entries.First().Request.PostData;
+            // SPEC:
+            // > <params>
+            // > List of posted parameters, if any
+            // Since this doesn't specify any behaviour in the case where the stated content-type
+            // doesn't match the actual content, we'll accept any vaguely sensible outcome.
+            Assert.IsNotNull(postData.Params);
+        }
+
+        [TestMethod]
         public async Task LogsQueryStringParams()
         {
             var content = new[]

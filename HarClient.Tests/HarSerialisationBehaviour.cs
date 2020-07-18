@@ -59,6 +59,15 @@ namespace JBlam.HarClient.Tests
             HarAssert.IsValidRequest(entry.Request);
         }
 
+        [TestMethod]
+        public async Task QueryStringRequestIsValid()
+        {
+            var queryStringRequest = new HttpRequestMessage(HttpMethod.Post, "http://example.net?key=value");
+            var sut = new HarEntrySource(queryStringRequest, default);
+            var entry = await sut.CreateEntryAsync(default);
+            Assert.IsTrue(entry.Request.QueryString.Count > 0, "Did not create any query string params");
+            HarAssert.IsValidRequest(entry.Request);
+        }
 
         [TestMethod]
         public async Task UrlEncodedContentRequestIsValid()
@@ -76,6 +85,23 @@ namespace JBlam.HarClient.Tests
             Assert.IsNotNull(entry.Request.PostData, "Failed to produce any postData");
             Assert.IsNotNull(entry.Request.PostData.Params, "URL-encoded content did not produce a params collection");
             Assert.IsTrue(entry.Request.PostData.Params.Any(), "URL-encoded content did not produce any params");
+            HarAssert.IsValidRequest(entry.Request);
+        }
+
+        [TestMethod]
+        public async Task IncorrectlyLabelledUrlEncodedContentRequestIsValid()
+        {
+            var lyingUrlEncodedRequest = new HttpRequestMessage(HttpMethod.Post, "http://example.net")
+            {
+                Content = new StringContent("I am not really URL-encoded params", Encoding.UTF8, "application/x-www-form-urlencoded")
+            };
+            var sut = new HarEntrySource(lyingUrlEncodedRequest, default);
+            var entry = await sut.CreateEntryAsync(default);
+            // SPEC:
+            // > <params>
+            // > List of posted parameters, if any
+            // Since this doesn't specify any behaviour in the case where the stated content-type
+            // doesn't match the actual content, we'll accept any vaguely sensible outcome.
             HarAssert.IsValidRequest(entry.Request);
         }
 

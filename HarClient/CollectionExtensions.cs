@@ -26,7 +26,8 @@ namespace JBlam.HarClient
         {
             foreach (string key in collection)
             {
-                yield return projection((key, collection[key]));
+                if (key != null)
+                    yield return projection((key, collection[key]));
             }
         }
     }
