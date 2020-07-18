@@ -52,10 +52,10 @@ namespace JBlam.HarClient
 
         readonly Task<byte[]> bytesAsync;
 
-        // TODO: per Github issue #8, this should be the bytes transferred (with compression)
+        // TODO: per Github issue #8, it's unclear what this number should be
         // TODO: per Github issue #24 consider reimplementing the HAR model in order to encapsulate the `-1`
         //       with something more sematically-meaningful
-        internal int HarBodySize => (int)Math.Min(Headers.ContentLength ?? -1, int.MaxValue);
+        internal int HarBodySize => -1;
 
         internal async Task<PostData?> GetPostData()
         {
