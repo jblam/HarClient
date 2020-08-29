@@ -25,10 +25,10 @@ namespace HarDemoHost.Controllers
         public IActionResult DoRedirect() => Redirect("/api/behaviour/content");
 
         [Route("redirect/infinite/{i}")]
-        public IActionResult DoInfiniteRedirect(int i) => Redirect($"/api/behaviour/redirect/{i + 1}");
+        public IActionResult DoInfiniteRedirect(int i) => Redirect($"/api/behaviour/redirect/infinite/{i + 1}");
 
         [Route("redirect/circular/{i}")]
-        public IActionResult DoCircularRedirect(int i) => Redirect($"/api/behaviour/redirect/{(i == 0 ? 1 : 0)}");
+        public IActionResult DoCircularRedirect(int i) => Redirect($"/api/behaviour/redirect/circular/{(i == 0 ? 1 : 0)}");
 
         [Route("not-found")]
         public IActionResult DoNotFound() => NotFound();

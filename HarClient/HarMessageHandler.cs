@@ -1,10 +1,10 @@
 ﻿using HarSharp;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,6 +17,8 @@ namespace JBlam.HarClient
     // Things: https://docs.microsoft.com/en-us/dotnet/api/system.net.http.stringcontent?view=netcore-3.1
     public class HarMessageHandler : DelegatingHandler
     {
+        internal const int MaximumRedirectCount = 50;
+
         public HarMessageHandler()
 #pragma warning disable CA2000 // Dispose objects before losing scope
                                // Justification: ctor parameter is owned and disposed by the base class.
@@ -54,13 +56,43 @@ namespace JBlam.HarClient
             DateFormatHandling = DateFormatHandling.IsoDateFormat,
         };
 
-        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        // TODO: implementation here
+        bool ShouldFollowRedirect => true;
+
+        protected override async Task<HttpResponseMessage?> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var entrySource = new HarEntrySource(request, DateTime.Now);
-            entries.Add(entrySource);
-            var response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
-            entrySource.SetResponse(response);
-            return response;
+            var redirectSet = new HashSet<Uri>();
+            var nextRequest = request ?? throw new ArgumentNullException(nameof(request));
+            while (true)
+            {
+                var response = await RequestOne(nextRequest, cancellationToken).ConfigureAwait(false);
+                if (response != null &&
+                    response.IsRedirect() &&
+                    ShouldFollowRedirect &&
+                    redirectSet.Count < MaximumRedirectCount &&
+                    redirectSet.Add(nextRequest.RequestUri))
+                {
+#pragma warning disable CA2000 // Dispose objects before losing scope
+                    // Justification: HttpRequestMessage disposes its content. The "temporary"
+                    // redirect messages don't own the content; the original request does.
+                    // Someone else is responsible for disposing that.
+                    nextRequest = response.CreateRedirectRequest(request);
+#pragma warning restore CA2000 // Dispose objects before losing scope
+                }
+                else
+                {
+                    return response;
+                }
+            }
+
+            async Task<HttpResponseMessage> RequestOne(HttpRequestMessage m, CancellationToken t)
+            {
+                var entrySource = new HarEntrySource(m, DateTime.Now);
+                entries.Add(entrySource);
+                var response = await base.SendAsync(m, t).ConfigureAwait(false);
+                entrySource.SetResponse(response);
+                return response;
+            }
         }
 
         // https://docs.microsoft.com/en-us/dotnet/api/system.net.http.httpmessagehandler?view=netcore-3.1
