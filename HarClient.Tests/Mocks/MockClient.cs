@@ -41,12 +41,12 @@ namespace JBlam.HarClient.Tests.Mocks
                 }
             });
 
-        static Uri RelativeUri(this string s) => new Uri(MockServerHandler.BaseUri, s);
+        public static Uri AsRelativeUri(string s) => new Uri(MockServerHandler.BaseUri, s);
         public static void Add(this RequestDictionary requests, string path, HttpMethod method, HttpRequestException exception) =>
-            requests.Add((path.RelativeUri(), method), Task.FromException<HttpResponseMessage>(exception));
+            requests.Add((AsRelativeUri(path), method), Task.FromException<HttpResponseMessage>(exception));
         public static void Add(this RequestDictionary requests, string path, HttpMethod method, HttpResponseMessage message) =>
-            requests.Add((path.RelativeUri(), method), Task.FromResult(message));
+            requests.Add((AsRelativeUri(path), method), Task.FromResult(message));
         public static void Add(this RequestDictionary requests, string path, HttpMethod method, Task<HttpResponseMessage> task) =>
-            requests.Add((path.RelativeUri(), method), task);
+            requests.Add((AsRelativeUri(path), method), task);
     }
 }

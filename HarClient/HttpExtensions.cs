@@ -20,9 +20,18 @@ namespace JBlam.HarClient
             {
                 Content = originalRequest.Content,
             }.WithHeaders(originalRequest.Headers);
-        public static bool IsRedirect(this HttpResponseMessage response) =>
-            response.StatusCode >= (HttpStatusCode)300 &&
-            response.StatusCode < (HttpStatusCode)400 &&
-            response.Headers.Location != null;
+        public static bool IsRedirect(this HttpResponseMessage response, out Uri? location)
+        {
+            var output =
+                response.StatusCode >= (HttpStatusCode)300 &&
+                response.StatusCode < (HttpStatusCode)400 &&
+                response.Headers.Location != null;
+            location = output ? response.Headers.Location : null;
+            return output;
+        }
+        public static Uri WithBase(this Uri maybeRelative, Uri presumedBase) =>
+            maybeRelative.IsAbsoluteUri
+                ? maybeRelative
+                : new Uri(presumedBase, maybeRelative);
     }
 }

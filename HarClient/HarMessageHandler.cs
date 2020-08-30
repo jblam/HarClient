@@ -61,16 +61,19 @@ namespace JBlam.HarClient
 
         protected override async Task<HttpResponseMessage?> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var redirectSet = new HashSet<Uri>();
             var nextRequest = request ?? throw new ArgumentNullException(nameof(request));
+            var redirectSet = new HashSet<Uri>
+            {
+                nextRequest.RequestUri
+            };
             while (true)
             {
                 var response = await RequestOne(nextRequest, cancellationToken).ConfigureAwait(false);
                 if (response != null &&
-                    response.IsRedirect() &&
+                    response.IsRedirect(out var location) &&
                     ShouldFollowRedirect &&
-                    redirectSet.Count < MaximumRedirectCount &&
-                    redirectSet.Add(nextRequest.RequestUri))
+                    redirectSet.Count <= MaximumRedirectCount &&
+                    redirectSet.Add(location!.WithBase(nextRequest.RequestUri)))
                 {
 #pragma warning disable CA2000 // Dispose objects before losing scope
                     // Justification: HttpRequestMessage disposes its content. The "temporary"
