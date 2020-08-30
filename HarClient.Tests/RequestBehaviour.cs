@@ -77,31 +77,5 @@ namespace JBlam.HarClient.Tests
                 $"/redirect/circular/0",
                 finalResponse.Headers.Location.ToString());
         }
-
-        // Ignore justification: kept here until issue #3 is merged, as demo of .NET platform behaviour
-        [TestMethod, Ignore]
-        public async Task NativeDoesRedirect()
-        {
-            // as a "nothing up my sleeve number" protection against off-by-one errors,
-            // let's start from a prime number
-            const int initialRedirectIdentifier = 17;
-            var handler = new HarMessageHandler();
-            var client = new HttpClient(handler)
-            {
-                BaseAddress = new Uri("https://localhost:44398")
-            };
-            try
-            {
-                var response = await client.GetAsync($"/api/behaviour/redirect/infinite/{initialRedirectIdentifier}");
-                Assert.AreEqual(HttpStatusCode.Found, response.StatusCode);
-                Assert.AreEqual(
-                    $"/api/behaviour/redirect/infinite/{initialRedirectIdentifier + HarMessageHandler.MaximumRedirectCount + 1}",
-                    response.Headers.Location.ToString());
-            }
-            catch (HttpRequestException hre)
-            {
-                throw new AssertInconclusiveException("Request failed. Possibly the server isn't running.", hre);
-            }
-        }
     }
 }
