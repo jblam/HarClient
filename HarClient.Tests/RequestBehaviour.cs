@@ -13,6 +13,30 @@ namespace JBlam.HarClient.Tests
     [TestClass]
     public class RequestBehaviour
     {
+        // as a "nothing up my sleeve number" protection against off-by-one errors,
+        // start infinite redirects from a prime number.
+        public const int InitialRedirectIdentifier = 17;
+
+        public static IEnumerable<(HttpMethod method, int status)> RedirectTestCases
+        {
+            get
+            {
+
+                var allVerbs = new[]
+                {
+                HttpMethod.Get,
+                HttpMethod.Post,
+                HttpMethod.Put,
+                HttpMethod.Delete,
+                HttpMethod.Head,
+            };
+                var allStatusCodes = Enumerable.Range(300, 100);
+                return from verb in allVerbs
+                       from status in allStatusCodes
+                       select (verb, status);
+            }
+        }
+
         static HttpResponseMessage RedirectTo(string relativeUri) => new HttpResponseMessage(HttpStatusCode.Redirect)
         {
             Headers =
@@ -42,9 +66,6 @@ namespace JBlam.HarClient.Tests
         [TestMethod]
         public async Task TerminatesInfiniteRedirectSet()
         {
-            // as a "nothing up my sleeve number" protection against off-by-one errors,
-            // let's start from a prime number
-            const int initialRedirectIdentifier = 17;
             var responses = Enumerable.Range(0, 100).Select(i =>
                    KeyValuePair.Create(
                        (MockClient.AsRelativeUri($"/redirect/infinite/{i}"), HttpMethod.Get),
@@ -52,10 +73,10 @@ namespace JBlam.HarClient.Tests
             var handler = new MockServerHandler();
             handler.Responses.AddRange(responses);
             var (sut, client) = MockClient.Create(handler);
-            var finalResponse = await client.GetAsync("/redirect/infinite/" + initialRedirectIdentifier);
+            var finalResponse = await client.GetAsync("/redirect/infinite/" + InitialRedirectIdentifier);
             Assert.AreEqual(HttpStatusCode.Found, finalResponse.StatusCode);
             Assert.AreEqual(
-                $"/redirect/infinite/{initialRedirectIdentifier + HarMessageHandler.MaximumRedirectCount + 1}",
+                $"/redirect/infinite/{InitialRedirectIdentifier + HarMessageHandler.MaximumRedirectCount + 1}",
                 finalResponse.Headers.Location.ToString());
         }
 

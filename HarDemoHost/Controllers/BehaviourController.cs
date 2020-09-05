@@ -12,7 +12,7 @@ namespace HarDemoHost.Controllers
     [ApiController]
     public class BehaviourController : ControllerBase
     {
-        [HttpGet, HttpPost, Route("content")]
+        [Route("content")]
         public IActionResult DoContent() => Ok(new SomeContent { Content = "Content 🚀", Collection = { 1, 2, } });
 
         [HttpPost, Route("accepted")]
@@ -22,7 +22,41 @@ namespace HarDemoHost.Controllers
         public IActionResult DoNoContent() => NoContent();
 
         [Route("redirect")]
-        public IActionResult DoRedirect() => Redirect("/api/behaviour/content");
+        [Route("redirect-found")]
+        public IActionResult DoRedirect() => LocalRedirect("/api/behaviour/content");
+        [Route("redirect-moved-permanent")]
+        public IActionResult DoRedirectPermanent() => RedirectPermanent("/api/behaviour/content");
+        [Route("redirect-see-other")]
+        public IActionResult DoRedirectSeeOther()
+        {
+            var output = new StatusCodeResult(303);
+            Response.Headers.Add("Location", "/api/behaviour/content");
+            return output;
+        }
+        [Route("redirect-temporary")]
+        public IActionResult DoRedirectTemporary() => RedirectPreserveMethod("/api/behaviour/content");
+        [Route("redirect-permanent")]
+        public IActionResult DoRedirect308() => RedirectPermanentPreserveMethod("/api/behaviour/content");
+        [Route("redirect-echo")]
+        public IActionResult DoRedirectEcho([FromQuery] int? status = null, [FromQuery] string location = "/api/behaviour/content")
+        {
+            if (!status.HasValue || status < 300 || status >= 400 || location == null)
+                return BadRequest();
+            switch (status)
+            {
+                case 301:
+                    return RedirectPermanent(location);
+                case 302:
+                    return LocalRedirect(location);
+                case 307:
+                    return RedirectPreserveMethod(location);
+                case 308:
+                    return RedirectPermanentPreserveMethod(location);
+                default:
+                    Response.Headers.Add("Location", location);
+                    return new StatusCodeResult(status.Value);
+            }
+        }
 
         [Route("redirect/infinite/{i}")]
         public IActionResult DoInfiniteRedirect(int i) => Redirect($"/api/behaviour/redirect/infinite/{i + 1}");
