@@ -16,18 +16,39 @@ namespace JBlam.HarClient
             return message;
         }
         public static HttpRequestMessage CreateRedirectRequest(this HttpResponseMessage response, HttpRequestMessage originalRequest) =>
-            new HttpRequestMessage(originalRequest.Method, new Uri(originalRequest.RequestUri, response.Headers.Location))
+            new HttpRequestMessage(GetRedirectMethod(originalRequest, response.StatusCode), new Uri(originalRequest.RequestUri, response.Headers.Location))
             {
                 Content = originalRequest.Content,
             }.WithHeaders(originalRequest.Headers);
+        static HttpMethod GetRedirectMethod(HttpRequestMessage originalMessage, HttpStatusCode redirectResponseCode) =>
+            originalMessage.Method != HttpMethod.Post
+            ? originalMessage.Method
+            : redirectResponseCode switch
+            {
+                HttpStatusCode.Ambiguous => HttpMethod.Get,
+                HttpStatusCode.Moved => HttpMethod.Get,
+                HttpStatusCode.Found => HttpMethod.Get,
+                HttpStatusCode.RedirectMethod => HttpMethod.Get,
+                _ => originalMessage.Method,
+            };
         public static bool IsRedirect(this HttpResponseMessage response, out Uri? location)
         {
-            var output =
-                response.StatusCode >= (HttpStatusCode)300 &&
-                response.StatusCode < (HttpStatusCode)400 &&
-                response.Headers.Location != null;
-            location = output ? response.Headers.Location : null;
-            return output;
+            var hasRedirectableStatus = response.StatusCode switch
+            {
+                HttpStatusCode.Ambiguous => true,
+                HttpStatusCode.Moved => true,
+                HttpStatusCode.Found => true,
+                HttpStatusCode.RedirectMethod => true,
+                HttpStatusCode.NotModified => false,
+                HttpStatusCode.UseProxy => false,
+                HttpStatusCode.Unused => false,
+                HttpStatusCode.RedirectKeepVerb => true,
+                (HttpStatusCode)308 => true,
+                _ => false,
+            };
+            var canRedirect = hasRedirectableStatus && response.Headers.Location != null;
+            location = hasRedirectableStatus ? response.Headers.Location : null;
+            return canRedirect;
         }
         public static Uri WithBase(this Uri maybeRelative, Uri presumedBase) =>
             maybeRelative.IsAbsoluteUri
