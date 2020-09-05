@@ -98,5 +98,53 @@ namespace JBlam.HarClient.Tests
                 $"/redirect/circular/0",
                 finalResponse.Headers.Location.ToString());
         }
+
+        [TestMethod]
+        public async Task RedirectsExpectedStatuses()
+        {
+            var contentUri = new Uri("/content", UriKind.Relative);
+
+            foreach (var (method, status) in RedirectTestCases)
+            {
+                var originalRequest = $"/redirect-echo?status={status}";
+                var (sut, client) = MockClient.Create(new MockServerHandler
+                {
+                    Responses =
+                    {
+                        { contentUri.OriginalString, MockServerHandler.AnyMethod, new HttpResponseMessage(HttpStatusCode.OK) },
+                        { originalRequest, method, new HttpResponseMessage((HttpStatusCode)status) { Headers = { Location = contentUri } } }
+                    }
+                });
+                var response = await client.SendAsync(new HttpRequestMessage(method, originalRequest));
+                if (ExpectsRedirect(status))
+                {
+                    Assert.AreEqual(contentUri.OriginalString, response.RequestMessage.RequestUri.PathAndQuery,
+                        "Did not follow redirect for status {0} as expected",
+                        status);
+                    var expectedFinalRequestMethod = ExpectsMethodChange(method, status)
+                        ? HttpMethod.Get
+                        : method;
+                    Assert.AreEqual(expectedFinalRequestMethod, response.RequestMessage.Method,
+                        "Unexpected request method when following {0} redirect", status);
+                }
+                else
+                {
+                    Assert.AreEqual(originalRequest, response.RequestMessage.RequestUri.PathAndQuery,
+                        "Unexpectedly followed redirect for status {0}", status);
+                }
+            }
+
+            static bool ExpectsRedirect(int status) => status switch
+            {
+                300 => true,
+                301 => true,
+                302 => true,
+                303 => true,
+                307 => true,
+                308 => true,
+                _ => false
+            };
+            static bool ExpectsMethodChange(HttpMethod method, int status) => method == HttpMethod.Post && status >= 300 && status <= 303;
+        }
     }
 }
