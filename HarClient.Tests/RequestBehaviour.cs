@@ -146,5 +146,25 @@ namespace JBlam.HarClient.Tests
             };
             static bool ExpectsMethodChange(HttpMethod method, int status) => method == HttpMethod.Post && status >= 300 && status <= 303;
         }
+
+        [TestMethod]
+        public void RedirectRequestCopiesOriginalHeaders()
+        {
+            const string expectedKey = "X-NONSTANDARD-HEADER",
+                expectedValue = "VALUE";
+            var request = new HttpRequestMessage(HttpMethod.Get, MockClient.AsRelativeUri("/asdf"))
+            {
+                Headers = { { expectedKey, expectedValue } }
+            };
+            var redirectResponse = new HttpResponseMessage(HttpStatusCode.Found)
+            {
+                RequestMessage = request,
+                Headers = { Location = new Uri("/jkl", UriKind.Relative) }
+            };
+            var redirectRequest = redirectResponse.CreateRedirectRequest(request);
+            CollectionAssert.AreEqual(
+                redirectRequest.Headers.GetValues(expectedKey).ToList(),
+                new[] { expectedValue });
+        }
     }
 }
