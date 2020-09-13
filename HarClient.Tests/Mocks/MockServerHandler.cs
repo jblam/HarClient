@@ -10,6 +10,8 @@ namespace JBlam.HarClient.Tests.Mocks
 
     class MockServerHandler : HttpMessageHandler
     {
+        public static readonly HttpMethod AnyMethod = new HttpMethod("*");
+
         // Design principle: this class should have the exact same observable behaviour
         // as SocketsHttpHandler and HttpClientHandler. Any behaviour outside what they
         // do is out-of-scope for now.
@@ -38,13 +40,27 @@ namespace JBlam.HarClient.Tests.Mocks
             new Dictionary<(Uri, HttpMethod), Task<HttpResponseMessage>>();
 
 
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var path = request.RequestUri;
             var method = request.Method;
             if (Responses.TryGetValue((path, method), out var response))
-                return response;
+                return CreateResponse(await response!);
+            if (Responses.TryGetValue((path, AnyMethod), out response))
+                return CreateResponse(await response!);
             throw new TestInvariantViolatedException($"No response defined for [{method} {path}]");
+
+            HttpResponseMessage CreateResponse(HttpResponseMessage original)
+            {
+                var output = new HttpResponseMessage(original.StatusCode)
+                {
+                    Content = original.Content,
+                    Version = original.Version,
+                    RequestMessage = request,
+                };
+                output.Headers.AddRange(original.Headers);
+                return output;
+            }
         }
     }
 }
